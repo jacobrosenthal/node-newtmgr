@@ -2,41 +2,11 @@
 
 var crc = require('crc');
 var through2 = require('through2');
-var Stream = require('stream');
-var SerialPort = require('serialport');
-var Readline = SerialPort.parsers.Readline;
 
 var CONSTANTS = require('./constants');
 
 
-function Transport(options) {
-  if(options && options.stream){
-    this.stream = options.stream;
-  }else{
-    this.stream = new SerialPort('/dev/tty.usbmodem1411', {
-      baudRate: 115200
-    });
-
-    this.stream.on('error', function(err){
-      console.log('err', err);
-    });
-
-    this.stream.on('close', function(err){
-      console.log('close', err);
-    });
-  }
-}
-
-
-Transport.prototype.readPacket = function(){
-  return this.stream
-    .pipe(Readline({delimiter: '\r\n'}))
-    .pipe(this._accumulatePacket())
-    .pipe(this._decode());
-}
-
-
-Transport.prototype._accumulatePacket = function() {
+var accumulatePacket = function() {
   var pktLen;
   var buffer = Buffer.alloc(0);
 
@@ -66,7 +36,7 @@ Transport.prototype._accumulatePacket = function() {
 }
 
 
-Transport.prototype._decode = function() {
+var decode = function() {
 
   function transform(data, enc, cb) {
 
@@ -84,21 +54,7 @@ Transport.prototype._decode = function() {
   return through2(transform);
 }
 
-
-Transport.prototype.writePacket = function(data){
-  var readable = new Stream.Readable();
-  readable._read = function(size) { /* do nothing */ };
-
-  readable
-    .pipe(this._encode())    
-    .pipe(this._fragmentPacket())
-    .pipe(this.stream);
-
-  readable.emit('data', data);
-}
-
-
-Transport.prototype._fragmentPacket = function() {
+var fragmentPacket = function() {
 
   function transform(data, enc, cb) {
 
@@ -147,7 +103,7 @@ Transport.prototype._fragmentPacket = function() {
 }
 
 
-Transport.prototype._encode = function() {
+var encode = function() {
 
   function transform(data, enc, cb) {
 
@@ -172,8 +128,4 @@ Transport.prototype._encode = function() {
 }
 
 
-Transport.prototype.close = function() {
-  this.stream.close();
-}
-
-module.exports = Transport;
+module.exports = {accumulatePacket, decode, fragmentPacket, encode};

@@ -1,31 +1,9 @@
 var through2 = require('through2');
-var async = require('async');
 
 var CONSTANTS = require('./constants');
 
 
-function reset(transport, cb)
-{
-  var command = _resetCommand();
-
-  var tasks = [
-    _writeReq,
-    _readResp,
-  ];
-
-  async.applyEachSeries(tasks, transport, command, function(err, returnArray){
-    if(err){ return cb(err); }
-
-    if(returnArray && returnArray[1]){
-      return cb(null, returnArray[1])
-    }else{
-      return cb();
-    }
-  });
-}
-
-
-function _resetCommand()
+function resetCommand()
 {
 
   nmr = {};
@@ -41,15 +19,7 @@ function _resetCommand()
 }
 
 
-function _writeReq(transport, nmr, cb) {
-  var command = _serialize(nmr);
-
-  transport.writePacket(command);
-  return cb();
-}
-
-
-function _serialize(nmr){
+function serialize(nmr){
 
   const buf = Buffer.alloc(8);
 
@@ -66,18 +36,7 @@ function _serialize(nmr){
 }
 
 
-function _readResp(transport, nmr, cb){
-  var stream = transport.readPacket()
-    .pipe(_accumulate());
-    // .pipe(concat(cb))
-
-    stream.once('data', function(data){
-      return cb(null, data);
-    });
-}
-
-
-function _accumulate() {
+function accumulate() {
   var header;
   var nonmgrhdr = false;
 
@@ -88,7 +47,7 @@ function _accumulate() {
       if(data.length < 8){
         return cb(new Error("Newtmgr request buffer too small"));
       }
-      var _header = _deserialize(data);
+      var _header = deserialize(data);
       if(_header && (_header.Op === CONSTANTS.NMGR_OP_READ_RSP || _header.Op ===CONSTANTS.NMGR_OP_WRITE_RSP)){
         header = _header;
       }
@@ -114,7 +73,7 @@ function _accumulate() {
 }
 
 
-function _deserialize(serializedBuffer){
+function deserialize(serializedBuffer){
   nmr = {};
   nmr.Op = serializedBuffer.readUInt8(0);
   nmr.Flags = serializedBuffer.readUInt8(1);
@@ -127,4 +86,4 @@ function _deserialize(serializedBuffer){
 }
 
 
-module.exports = {reset, _readResp, _resetCommand, _serialize, _deserialize, _accumulate};
+module.exports = {resetCommand, serialize, deserialize, accumulate};

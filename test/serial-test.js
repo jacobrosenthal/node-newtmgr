@@ -7,7 +7,7 @@ chai.use(sinonChai);
 var through2 = require('through2');
 var Stream = require('stream');
 
-var Serial = require('../serial');
+var transport = require('../serial');
 
 var resetCommand = new Buffer([0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x05, 0x7b, 0x7d]);
 var resetEncoded = new Buffer([0x41, 0x41, 0x77, 0x43, 0x41, 0x41, 0x41, 0x43, 0x41, 0x41, 0x41, 0x41, 0x42, 0x58, 0x74, 0x39, 0x4c, 0x67, 0x41, 0x3d]);
@@ -20,14 +20,12 @@ var listResponseDecoded     = new Buffer([0x01, 0x00, 0x00, 0xf4, 0x00, 0x01, 0x
 
 describe('serial', function () {
   var stream;
-  var transport;
 
   beforeEach(function () {
     
     stream = new Stream.Duplex();
     stream._read = function(size) { /* do nothing */ };
     
-    transport = new Serial({stream});
   });
 
 
@@ -41,7 +39,7 @@ describe('serial', function () {
     });
 
     stream
-      .pipe(transport._encode())
+      .pipe(transport.encode())
       .pipe(listen);
 
     stream.emit('data', resetCommand);
@@ -59,23 +57,11 @@ describe('serial', function () {
     });
 
     stream
-      .pipe(transport._fragmentPacket())
+      .pipe(transport.fragmentPacket())
       .pipe(listen);
 
     stream.emit('data', resetEncoded);
     stream.emit('end');
-  });
-
-
-  it('should writePacket', function (done) {
-
-    stream._write = function (chunk, enc, next) {
-      expect(chunk).to.deep.equal(resetWritten);
-      next();
-      done();
-    };
-
-    transport.writePacket(resetCommand)
   });
 
 
@@ -89,7 +75,7 @@ describe('serial', function () {
     });
 
     stream
-      .pipe(transport._accumulatePacket())
+      .pipe(transport.accumulatePacket())
       .pipe(listen);
 
     stream.emit('data', listResponse1);
@@ -109,30 +95,12 @@ describe('serial', function () {
     });
 
     stream
-      .pipe(transport._decode())
+      .pipe(transport.decode())
       .pipe(listen);
 
     stream.emit('data', listResponseAccumulated);
     stream.emit('end');
   });
 
-
-  it('should read fragmented packet data', function (done) {
-
-    var listen = through2(function (chunk, enc, callback) {
-
-      expect(listResponseDecoded).to.deep.equal(chunk);
-      callback();
-      done();
-    });
-
-    transport.readPacket()
-      .pipe(listen);
-
-    stream.emit('data', listResponse1);
-    stream.emit('data', listResponse2);
-    stream.emit('data', listResponse3);
-    stream.emit('end');
-  });
 
 });

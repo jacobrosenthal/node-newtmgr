@@ -44,8 +44,8 @@ describe('nmgr', function () {
 
   it('should serialize a command', function (done) {
 
-    var nmr = nmgr._resetCommand();
-    var cmd = nmgr._serialize(nmr);
+    var nmr = nmgr.resetCommand();
+    var cmd = nmgr.serialize(nmr);
 
     expect(cmd).to.deep.equal(resetCommand);
     done();
@@ -54,7 +54,7 @@ describe('nmgr', function () {
 
   it('should deserialize a command', function (done) {
 
-    var nmr = nmgr._deserialize(resetCommand);
+    var nmr = nmgr.deserialize(resetCommand);
     expect(nmr).to.deep.equal(nmrReset);
     done();
   });
@@ -70,24 +70,8 @@ describe('nmgr', function () {
     });
 
     readable
-      .pipe(nmgr._accumulate())
+      .pipe(nmgr.accumulate())
       .pipe(listen);
-
-    readable.emit('data', listResponseDecoded);
-    readable.emit('end');
-  });
-
-  it('should read response', function (done) {
-
-    var transport = {};
-    transport.readPacket = function(){
-      return readable;
-    }
-
-    nmgr._readResp(transport, null, function(err, data){
-      expect(data).to.deep.equal(listResponseObject);
-      done();
-    });
 
     readable.emit('data', listResponseDecoded);
     readable.emit('end');
