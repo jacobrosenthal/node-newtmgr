@@ -79,11 +79,11 @@ function _readResp(transport, nmr, cb){
 
 function _accumulate() {
 	var header;
-	var byteCnt = 0;
+  var nonmgrhdr = false;
 
 	function transform(data, enc, cb) {
 
-		if (!header) {
+		if (!nonmgrhdr) {
 
 			if(data.length < 8){
         return cb(new Error("Newtmgr request buffer too small"));
@@ -91,21 +91,26 @@ function _accumulate() {
 			var _header = _deserialize(data);	
 			if(_header && (_header.Op === CONSTANTS.NMGR_OP_READ_RSP || _header.Op ===CONSTANTS.NMGR_OP_WRITE_RSP)){
 				header = _header;
-				data = header.Data;
 			}
 		}
 
-		byteCnt = byteCnt + data.length;
-		if(typeof header !== 'undefined' && (header.Len >= data.length)){
-			this.push(data);
-			byteCnt = 0;
-			header = undefined;
-			return;
+		if(typeof header !== 'undefined'){
+      if(nonmgrhdr){
+        header.Data = Buffer.concat([header.Data, data])
+      }
+
+      if(header.Len >= header.Data.length){
+        this.push(header);
+        header = undefined;
+        nonmgrhdr = false;
+      }else{
+        nonmgrhdr = true;
+      }
 		}
 		return cb();
 	}
 
-	return through2(transform);
+	return through2.obj(transform);
 }
 
 
