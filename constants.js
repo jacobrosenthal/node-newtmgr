@@ -1,0 +1,36 @@
+"use strict";
+
+module.exports = {
+
+    NMGR_OP_READ        : 0,
+    NMGR_OP_READ_RSP	: 1,
+    NMGR_OP_WRITE       : 2,
+    NMGR_OP_WRITE_RSP  	: 3,
+
+	NMGR_ERR_OK       	: 0,
+	NMGR_ERR_EUNKNOWN 	: 1,
+	NMGR_ERR_ENOMEM   	: 2,
+	NMGR_ERR_EINVAL   	: 3,
+	NMGR_ERR_ETIMEOUT 	: 4,
+	NMGR_ERR_ENOENT   	: 5,
+
+	NMGR_GROUP_ID_DEFAULT : 0,
+	NMGR_GROUP_ID_IMAGE   : 1,
+	NMGR_GROUP_ID_STATS   : 2,
+	NMGR_GROUP_ID_CONFIG  : 3,
+	NMGR_GROUP_ID_LOGS    : 4,
+	NMGR_GROUP_ID_CRASH   : 5,
+	NMGR_GROUP_ID_SPLIT   : 6,
+	NMGR_GROUP_ID_RUN     : 7,
+	NMGR_GROUP_ID_FS      : 8,
+	NMGR_GROUP_ID_PERUSER : 64,
+
+	NMGR_ID_ECHO           : 0,
+	NMGR_ID_CONS_ECHO_CTRL : 1,
+	NMGR_ID_TASKSTATS      : 2,
+	NMGR_ID_MPSTATS        : 3,
+	NMGR_ID_DATETIME_STR   : 4,
+	NMGR_ID_RESET          : 5,
+
+	START : 1545 // 0x06, 0x09
+};
