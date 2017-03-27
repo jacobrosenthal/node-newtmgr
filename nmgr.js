@@ -86,7 +86,7 @@ function _accumulate() {
 		if (!header) {
 
 			if(data.length < 8){
-				return cb(null, null) // explicit null ends stream?????
+        return cb(new Error("Newtmgr request buffer too small"));
 			}
 			var _header = _deserialize(data);	
 			if(_header && (_header.Op === CONSTANTS.NMGR_OP_READ_RSP || _header.Op ===CONSTANTS.NMGR_OP_WRITE_RSP)){
