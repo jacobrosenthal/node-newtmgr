@@ -11,26 +11,29 @@ var CONSTANTS = require('./constants');
 
 function Transport(options) {
   if(options){
-    this.writable = options.writable;
-    this.readable = options.readable;
+    this.stream = options.stream;
+    // this.readable = options.readable;
   }else{
-    this.writable = new SerialPort('/dev/tty.usbmodem1411', {
+    this.stream = new SerialPort('/dev/tty.usbmodem1411', {
       baudRate: 115200
     });
 
-    this.writable.on('error', function(err){
+    this.stream.on('error', function(err){
       console.log('err', err);
     });
 
-    this.readable = this.writable.pipe(Readline({delimiter: '\r\n'}))
+    this.stream.on('close', function(err){
+      console.log('close', err);
+    });
   }
 }
 
 
-Transport.prototype.readPacket =function(){
- return this.readable
-      .pipe(this._accumulatePacket())
-      .pipe(this._decode());
+Transport.prototype.readPacket = function(){
+ return this.stream
+    .pipe(Readline({delimiter: '\r\n'}))
+    .pipe(this._accumulatePacket())
+    .pipe(this._decode());
 }
 
 
@@ -52,14 +55,12 @@ Transport.prototype._accumulatePacket = function() {
     buffer = Buffer.concat([buffer, msgData]);
 
     if(pktLen === buffer.length){
-      cb(null, buffer);
+      this.push(buffer)
       //I think we should just close to clear?
       pktLen = undefined;
       buffer = Buffer.alloc(0);
-    }else{
-      cb(); // wait for more data
     }
-
+    return cb();
   }
 
   return through2(transform);
@@ -75,9 +76,9 @@ Transport.prototype._decode = function() {
       var finalData = data.slice(0,crcIndex);
 
       if(crcValue === crc.crc16xmodem(finalData)){
-        cb(null, finalData);
+        return cb(null, finalData);
       }else{
-        cb(null, null); //ends stream??
+        return cb(new Error("crc mismatch"));
       }
   }
 
@@ -93,7 +94,7 @@ Transport.prototype.writePacket = function(data){
   readable
     .pipe(this._encode())    
     .pipe(this._fragmentPacket())
-    .pipe(this.writable)
+    .pipe(this.stream)
 
   readable.emit('data', data);
 }
@@ -139,8 +140,9 @@ Transport.prototype._fragmentPacket = function() {
 
       written += writeLen;
 
-      cb(null, buffer)
+      this.push(buffer);
     }
+    return cb();
   }
 
   return through2(transform);
@@ -165,7 +167,7 @@ Transport.prototype._encode = function() {
     
     var base64DataString = outBuffer.toString('base64');
 
-    cb(null, new Buffer(base64DataString));
+    return cb(null, new Buffer(base64DataString));
   }
 
   return through2(transform);

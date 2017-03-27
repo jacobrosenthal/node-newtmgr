@@ -1,1 +1,1 @@
-#unofficial apache mynewt manager nmgr
+#unofficial apache mynewt manager newtmgr

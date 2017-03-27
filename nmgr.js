@@ -71,8 +71,8 @@ function _readResp(transport, nmr, cb){
   	.pipe(_accumulate());
   	// .pipe(concat(cb))
 
-  	stream.on('data', function (data) {
-  		return cb(null, data)
+    stream.once('data', function(data){
+      return cb(null, data);
   	});
 }
 
@@ -97,12 +97,12 @@ function _accumulate() {
 
 		byteCnt = byteCnt + data.length;
 		if(typeof header !== 'undefined' && (header.Len >= data.length)){
-			cb(null, data);
+			this.push(data);
 			byteCnt = 0;
 			header = undefined;
-		}else{
-			return cb(null, null);
+			return;
 		}
+		return cb();
 	}
 
 	return through2(transform);

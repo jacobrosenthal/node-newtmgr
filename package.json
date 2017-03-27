@@ -1,5 +1,5 @@
 {
-  "name": "sumfin",
+  "name": "node-newtmgr",
   "version": "0.0.1",
   "description": "unofficial Apache MyNewt Manager",
   "main": "index.js",
