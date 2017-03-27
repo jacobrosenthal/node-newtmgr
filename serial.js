@@ -29,7 +29,7 @@ function Transport(options) {
 
 
 Transport.prototype.readPacket = function(){
- return this.stream
+  return this.stream
     .pipe(Readline({delimiter: '\r\n'}))
     .pipe(this._accumulatePacket())
     .pipe(this._decode());
@@ -77,7 +77,7 @@ Transport.prototype._decode = function() {
       if(crcValue === crc.crc16xmodem(finalData)){
         return cb(null, finalData);
       }else{
-        return cb(new Error("crc mismatch"));
+        return cb(new Error("CRC error"));
       }
   }
 
@@ -86,14 +86,13 @@ Transport.prototype._decode = function() {
 
 
 Transport.prototype.writePacket = function(data){
-
   var readable = new Stream.Readable();
   readable._read = function(size) { /* do nothing */ };
 
   readable
     .pipe(this._encode())    
     .pipe(this._fragmentPacket())
-    .pipe(this.stream)
+    .pipe(this.stream);
 
   readable.emit('data', data);
 }
@@ -172,5 +171,9 @@ Transport.prototype._encode = function() {
   return through2(transform);
 }
 
+
+Transport.prototype.close = function() {
+  this.stream.close();
+}
 
 module.exports = Transport;
