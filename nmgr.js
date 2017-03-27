@@ -6,22 +6,22 @@ var CONSTANTS = require('./constants');
 
 function reset(transport, cb)
 {
-	var command = _resetCommand();
+  var command = _resetCommand();
 
-	var tasks = [
-		_writeReq,
-		_readResp,
-	];
+  var tasks = [
+    _writeReq,
+    _readResp,
+  ];
 
-	async.applyEachSeries(tasks, transport, command, function(err, returnArray){
-		if(err){ return cb(err); }
+  async.applyEachSeries(tasks, transport, command, function(err, returnArray){
+    if(err){ return cb(err); }
 
-		if(returnArray && returnArray[1]){
-			return cb(null, returnArray[1])
-		}else{
-			return cb();
-		}
-	});
+    if(returnArray && returnArray[1]){
+      return cb(null, returnArray[1])
+    }else{
+      return cb();
+    }
+  });
 }
 
 
@@ -44,57 +44,57 @@ function _resetCommand()
 function _writeReq(transport, nmr, cb) {
   var command = _serialize(nmr);
 
-	transport.writePacket(command);
-	return cb();
+  transport.writePacket(command);
+  return cb();
 }
 
 
 function _serialize(nmr){
 
-	const buf = Buffer.alloc(8);
-	
-	buf.writeUInt8(nmr.Op, 0);
-	buf.writeUInt8(nmr.Flags, 1);
+  const buf = Buffer.alloc(8);
 
-	buf.writeUInt16BE(nmr.Len, 2);
-	buf.writeUInt16BE(nmr.Group, 4);
+  buf.writeUInt8(nmr.Op, 0);
+  buf.writeUInt8(nmr.Flags, 1);
 
-	buf.writeUInt8(nmr.Seq, 6);
-	buf.writeUInt8(nmr.Id, 7);
+  buf.writeUInt16BE(nmr.Len, 2);
+  buf.writeUInt16BE(nmr.Group, 4);
 
-	return Buffer.concat([buf, nmr.Data]);
+  buf.writeUInt8(nmr.Seq, 6);
+  buf.writeUInt8(nmr.Id, 7);
+
+  return Buffer.concat([buf, nmr.Data]);
 }
 
 
 function _readResp(transport, nmr, cb){
   var stream = transport.readPacket()
-  	.pipe(_accumulate());
-  	// .pipe(concat(cb))
+    .pipe(_accumulate());
+    // .pipe(concat(cb))
 
     stream.once('data', function(data){
       return cb(null, data);
-  	});
+    });
 }
 
 
 function _accumulate() {
-	var header;
+  var header;
   var nonmgrhdr = false;
 
-	function transform(data, enc, cb) {
+  function transform(data, enc, cb) {
 
-		if (!nonmgrhdr) {
+    if (!nonmgrhdr) {
 
-			if(data.length < 8){
+      if(data.length < 8){
         return cb(new Error("Newtmgr request buffer too small"));
-			}
-			var _header = _deserialize(data);	
-			if(_header && (_header.Op === CONSTANTS.NMGR_OP_READ_RSP || _header.Op ===CONSTANTS.NMGR_OP_WRITE_RSP)){
-				header = _header;
-			}
-		}
+      }
+      var _header = _deserialize(data);
+      if(_header && (_header.Op === CONSTANTS.NMGR_OP_READ_RSP || _header.Op ===CONSTANTS.NMGR_OP_WRITE_RSP)){
+        header = _header;
+      }
+    }
 
-		if(typeof header !== 'undefined'){
+    if(typeof header !== 'undefined'){
       if(nonmgrhdr){
         header.Data = Buffer.concat([header.Data, data])
       }
@@ -106,11 +106,11 @@ function _accumulate() {
       }else{
         nonmgrhdr = true;
       }
-		}
-		return cb();
-	}
+    }
+    return cb();
+  }
 
-	return through2.obj(transform);
+  return through2.obj(transform);
 }
 
 
