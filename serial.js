@@ -10,9 +10,8 @@ var CONSTANTS = require('./constants');
 
 
 function Transport(options) {
-  if(options){
+  if(options && options.stream){
     this.stream = options.stream;
-    // this.readable = options.readable;
   }else{
     this.stream = new SerialPort('/dev/tty.usbmodem1411', {
       baudRate: 115200
