@@ -6,7 +6,6 @@ chai.use(sinonChai);
 
 var from2 = require('from2');
 var concat = require('concat-stream');
-var Stream = require('stream');
 
 var serial = require('../serial');
 
