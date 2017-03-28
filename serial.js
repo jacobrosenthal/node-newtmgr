@@ -4,16 +4,14 @@ var crc = require('crc');
 var through2 = require('through2');
 var pipeline = require('pumpify');
 
-var SerialPort = require('serialport');
-var Readline = SerialPort.parsers.Readline;
-var split = require("split2");
+var split2 = require("split2");
 
 
 var CONSTANTS = require('./constants');
 
 
 var decode = function(){
-  return pipeline(Readline({delimiter: '\r\n'}), _accumulatePacket(), _decode());
+  return pipeline(split2('\r\n'), _accumulatePacket(), _decode());
 }
 
 
