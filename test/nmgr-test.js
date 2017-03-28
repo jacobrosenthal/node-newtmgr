@@ -49,7 +49,7 @@ describe('nmgr', function () {
       done();
     };
 
-    nmgr.reset()
+    from2([nmgr.generateResetBuffer()])
       .pipe(concat(complete));
   });
 

@@ -1,10 +1,9 @@
 var through2 = require('through2');
-var from2 = require('from2');
 
 var CONSTANTS = require('./constants');
 
 
-function _resetCommand2()
+function generateResetBuffer()
 {
   nmr = {};
   nmr.Data = Buffer.from("{}");
@@ -16,28 +15,6 @@ function _resetCommand2()
   nmr.Id = CONSTANTS.NMGR_ID_RESET;
 
   return _serialize(nmr);
-}
-
-function _resetCommand()
-{
-  nmr = {};
-  nmr.Data = Buffer.from("{}");
-  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
-  nmr.Flags = 0;
-  nmr.Len = nmr.Data.length;
-  nmr.Group = CONSTANTS.NMGR_GROUP_ID_DEFAULT;
-  nmr.Seq = 0;
-  nmr.Id = CONSTANTS.NMGR_ID_RESET;
-
-  return nmr;
-}
-
-
-function reset() {
-  var nmr = _resetCommand();
-  var command = _serialize(nmr);
-
-  return from2([command]);
 }
 
 
@@ -113,4 +90,4 @@ function _deserialize(serializedBuffer){
 }
 
 
-module.exports = {decode, reset, _serialize, _deserialize, _accumulate, _resetCommand2};
+module.exports = {generateResetBuffer, decode, _serialize, _deserialize, _accumulate};
