@@ -1,33 +1,25 @@
 var through2 = require('through2');
-var async = require('async');
+var from2 = require('from2');
 
 var CONSTANTS = require('./constants');
 
 
-function reset(transport, cb)
+function _resetCommand2()
 {
-  var command = _resetCommand();
+  nmr = {};
+  nmr.Data = Buffer.from("{}");
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = nmr.Data.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_DEFAULT;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.NMGR_ID_RESET;
 
-  var tasks = [
-    _writeReq,
-    _readResp,
-  ];
-
-  async.applyEachSeries(tasks, transport, command, function(err, returnArray){
-    if(err){ return cb(err); }
-
-    if(returnArray && returnArray[1]){
-      return cb(null, returnArray[1])
-    }else{
-      return cb();
-    }
-  });
+  return _serialize(nmr);
 }
-
 
 function _resetCommand()
 {
-
   nmr = {};
   nmr.Data = Buffer.from("{}");
   nmr.Op = CONSTANTS.NMGR_OP_WRITE;
@@ -41,11 +33,11 @@ function _resetCommand()
 }
 
 
-function _writeReq(transport, nmr, cb) {
+function reset() {
+  var nmr = _resetCommand();
   var command = _serialize(nmr);
 
-  transport.writePacket(command);
-  return cb();
+  return from2([command]);
 }
 
 
@@ -66,14 +58,8 @@ function _serialize(nmr){
 }
 
 
-function _readResp(transport, nmr, cb){
-  var stream = transport.readPacket()
-    .pipe(_accumulate());
-    // .pipe(concat(cb))
-
-    stream.once('data', function(data){
-      return cb(null, data);
-    });
+function decode(){
+  return _accumulate();
 }
 
 
@@ -127,4 +113,4 @@ function _deserialize(serializedBuffer){
 }
 
 
-module.exports = {reset, _readResp, _resetCommand, _serialize, _deserialize, _accumulate};
+module.exports = {decode, reset, _serialize, _deserialize, _accumulate, _resetCommand2};
