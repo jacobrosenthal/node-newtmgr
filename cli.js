@@ -1,18 +1,35 @@
-// var transports = {
-//  serial: require('serial')
-// };
-// var Transport = transports[process.argv.SomehowGet('--transport')];
+var SerialPort = require('serialport');
+var through2 = require('through2');
+// var concat = require('concat-stream');
 
 var nmgr = require('./nmgr');
-var Transport = require('./serial');
+var serial = require('./serial');
 
-var transport = new Transport();
+var stream = new SerialPort('/dev/tty.usbmodem1411', {
+  baudRate: 115200
+});
 
 if (process.argv.indexOf('--reset') !== -1) {
-  nmgr.reset(transport, function(err, data){
-    console.log("nmgr.reset", err, data);
-    transport.close();
-    process.exit(0);
+
+  var listen = through2.obj(function (chunk, enc, callback) {
+    console.log(chunk)
+    process.exit(0)
   });
+
+  // var complete = function(data){
+  //   console.log(data)
+  //   process.exit(0)
+  // }
+
+  nmgr.reset()
+  .pipe(serial.encode())
+  .pipe(stream)
+
+  stream
+  .pipe(serial.decode())
+  .pipe(nmgr.decode())
+  .pipe(listen)
+  // .pipe(concat(complete));
+
 }
 

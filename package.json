@@ -18,8 +18,9 @@
     "serialport": "^5.0.0-beta3"
   },
   "dependencies": {
-    "async": "^2.2.0",
     "crc": "^3.4.4",
+    "from2": "^2.3.0",
+    "split2": "^2.1.1",
     "through2": "^2.0.3"
   }
 }
