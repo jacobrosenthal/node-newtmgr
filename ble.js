@@ -4,6 +4,8 @@ var from = require('from2')
 var through2 = require('through2')
 var duplexify = require('duplexify')
 var Readable = require('stream').Readable;
+var hasIn = require('lodash.hasin');
+var has = require('lodash.has');
 var debug = require('debug')('newtmgr-ble')
 
 
@@ -61,7 +63,7 @@ function createStream (opts) {
   }
 
   var onDiscover = function (peripheral) {
-    if(peripheral && peripheral.advertisement && peripheral.advertisement.localName && peripheral.advertisement.localName && opts && opts.name && (peripheral.advertisement.localName !== opts.name))
+    if(hasIn(peripheral, 'advertisement.localName') && has(opts, 'name') && (peripheral.advertisement.localName !== opts.name))
     {
       return;
     }
