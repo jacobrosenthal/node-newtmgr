@@ -62,7 +62,7 @@ function _accumulate() {
         header.Data = Buffer.concat([header.Data, data])
       }
 
-      if(header.Len >= header.Data.length){
+      if(header.Data.length >= header.Len){
         this.push(header);
         header = undefined;
         nonmgrhdr = false;
