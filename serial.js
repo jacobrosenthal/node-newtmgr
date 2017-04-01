@@ -49,15 +49,15 @@ var _decode = function() {
 
   function transform(data, enc, cb) {
 
-      var crcIndex = data.length-2;
-      var crcValue = data.readUInt16BE(crcIndex);
-      var finalData = data.slice(0,crcIndex);
+    var crcIndex = data.length-2;
+    var crcValue = data.readUInt16BE(crcIndex);
+    var finalData = data.slice(0,crcIndex);
 
-      if(crcValue === crc.crc16xmodem(finalData)){
-        return cb(null, finalData);
-      }else{
-        return cb(new Error("CRC error"));
-      }
+    if(crcValue === crc.crc16xmodem(finalData)){
+      return cb(null, finalData);
+    }else{
+      return cb(new Error("CRC error"));
+    }
   }
 
   return through2(transform);
