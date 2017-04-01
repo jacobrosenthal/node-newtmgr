@@ -45,9 +45,33 @@ if (argv.reset && argv.serial) {
     .pipe(listen);
 }
 
+if (argv.confirm && argv.serial) {
+  // from2 will close transport on you, so only use if you only want to do one operation
+  from2([nmgr.generateConfirmBuffer()])
+    .pipe(serial.encode())
+    .pipe(stream);
+
+  stream
+    .pipe(serial.decode())
+    .pipe(nmgr.decode())
+    .pipe(listen);
+}
+
 if (argv.list && argv.serial) {
   // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateListBuffer()])
+    .pipe(serial.encode())
+    .pipe(stream);
+
+  stream
+    .pipe(serial.decode())
+    .pipe(nmgr.decode())
+    .pipe(listen);
+}
+
+if (argv.test && argv.serial) {
+  // from2 will close transport on you, so only use if you only want to do one operation
+  from2([nmgr.generateTestBuffer(argv.hash)])
     .pipe(serial.encode())
     .pipe(stream);
 
@@ -67,9 +91,29 @@ if (argv.reset && argv.ble) {
     .pipe(listen);
 }
 
+if (argv.confirm && argv.ble) {
+  // from2 will close transport on you, so only use if you only want to do one operation
+  from2([nmgr.generateConfirmBuffer()])
+    .pipe(stream);
+
+  stream
+    .pipe(nmgr.decode())
+    .pipe(listen);
+}
+
 if (argv.list && argv.ble) {
   // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateListBuffer()])
+    .pipe(stream);
+
+  stream
+    .pipe(nmgr.decode())
+    .pipe(listen);
+}
+
+if (argv.test && argv.ble) {
+  // from2 will close transport on you, so only use if you only want to do one operation
+  from2([nmgr.generateTestBuffer(argv.hash)])
     .pipe(stream);
 
   stream
