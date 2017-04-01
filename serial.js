@@ -12,7 +12,7 @@ var debug = require('debug')('newtmgr-serial')
 
 
 var decode = function(){
-  return pipeline(split2('\r\n'), _accumulatePacket(), _decode());
+  return pipeline(split2('\n'), _accumulatePacket(), _decode());
 }
 
 
