@@ -8,6 +8,7 @@ var split2 = require("split2");
 
 
 var CONSTANTS = require('./constants');
+var debug = require('debug')('newtmgr-serial')
 
 
 var decode = function(){
@@ -20,6 +21,7 @@ var _accumulatePacket = function() {
   var buffer = Buffer.alloc(0);
 
   function transform(data, enc, cb) {
+    debug("_accumulatePacket", data.toString('hex'));
 
     var type = data.readUInt16BE(0);
     var base64DataString = data.slice(2).toString('ascii');
@@ -48,6 +50,7 @@ var _accumulatePacket = function() {
 var _decode = function() {
 
   function transform(data, enc, cb) {
+    debug("_decode", data.toString('hex'));
 
     var crcIndex = data.length-2;
     var crcValue = data.readUInt16BE(crcIndex);
@@ -72,6 +75,7 @@ var encode = function(){
 var _fragmentPacket = function() {
 
   function transform(data, enc, cb) {
+    debug("_fragmentPacket", data.toString('hex'));
 
     var written = 0;
     var totlen = data.length;
@@ -121,6 +125,7 @@ var _fragmentPacket = function() {
 var _encode = function() {
 
   function transform(data, enc, cb) {
+    debug("_encode", data.toString('hex'));
 
     var crcValue = crc.crc16xmodem(data);
     var crcBuffer = Buffer.alloc(2);

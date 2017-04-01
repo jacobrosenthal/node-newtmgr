@@ -1,6 +1,7 @@
 var through2 = require('through2');
 
 var CONSTANTS = require('./constants');
+var debug = require('debug')('newtmgr')
 
 
 function generateResetBuffer()
@@ -45,6 +46,7 @@ function _accumulate() {
   var nonmgrhdr = false;
 
   function transform(data, enc, cb) {
+    debug("_accumulate", data.toString('hex'));
 
     if (!nonmgrhdr) {
 
