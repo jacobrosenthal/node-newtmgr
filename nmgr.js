@@ -6,6 +6,56 @@ var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr')
 
 
+function generateTestBuffer(hash)
+{
+  if(!hash || typeof hash !=="string")
+  {
+    throw new Error("must supply hash as string")
+  }
+
+  var cmd = {}
+  cmd.confirm = false;
+  cmd.hash = new Buffer(hash, "hex")
+  var encoded = cbor.encode(cmd)
+
+  nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
+
+  return _serialize(nmr);
+}
+
+
+function generateConfirmBuffer(hash)
+{
+  var hashBuffer = null;
+  if(hash && typeof hash === "string"){
+    hashBuffer = new Buffer(hash, "hex")
+  }
+
+  var cmd = {}
+  cmd.confirm = true;
+  cmd.hash = hashBuffer
+  var encoded = cbor.encode(cmd)
+
+  nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
+
+  return _serialize(nmr);
+}
+
+
 function generateResetBuffer()
 {
   nmr = {};
@@ -120,4 +170,4 @@ function _deserialize(serializedBuffer){
 }
 
 
-module.exports = {generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate};
+module.exports = {generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate};
