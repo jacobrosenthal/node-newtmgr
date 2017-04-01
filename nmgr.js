@@ -1,4 +1,6 @@
 var through2 = require('through2');
+const cbor = require('borc')
+var pipeline = require('pumpify');
 
 var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr')
@@ -37,9 +39,20 @@ function _serialize(nmr){
 
 
 function decode(){
-  return _accumulate();
+  return pipeline.obj(_accumulate(), _decode());
 }
 
+
+function _decode() {
+
+  function transform(data, enc, cb) {
+    debug("_decode", data);
+    var decoded = cbor.decodeFirst(data.Data);
+    return cb(null, decoded);
+  }
+
+  return through2.obj(transform);
+}
 
 function _accumulate() {
   var header;
