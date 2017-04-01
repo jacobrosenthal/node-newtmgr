@@ -21,6 +21,21 @@ function generateResetBuffer()
 }
 
 
+function generateListBuffer()
+{
+  nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
+
+  return _serialize(nmr);
+}
+
+
 function _serialize(nmr){
 
   const buf = Buffer.alloc(8);
@@ -105,4 +120,4 @@ function _deserialize(serializedBuffer){
 }
 
 
-module.exports = {generateResetBuffer, decode, _serialize, _deserialize, _accumulate};
+module.exports = {generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate};

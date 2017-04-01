@@ -2,10 +2,10 @@
 
 module.exports = {
 
-    NMGR_OP_READ        : 0,
-    NMGR_OP_READ_RSP  : 1,
-    NMGR_OP_WRITE       : 2,
-    NMGR_OP_WRITE_RSP   : 3,
+  NMGR_OP_READ        : 0,
+  NMGR_OP_READ_RSP    : 1,
+  NMGR_OP_WRITE       : 2,
+  NMGR_OP_WRITE_RSP   : 3,
 
   NMGR_ERR_OK         : 0,
   NMGR_ERR_EUNKNOWN   : 1,
@@ -31,6 +31,11 @@ module.exports = {
   NMGR_ID_MPSTATS        : 3,
   NMGR_ID_DATETIME_STR   : 4,
   NMGR_ID_RESET          : 5,
+
+  IMGMGR_NMGR_ID_STATE    : 0,
+  IMGMGR_NMGR_ID_UPLOAD   : 1,
+  IMGMGR_NMGR_ID_CORELIST : 3,
+  IMGMGR_NMGR_ID_CORELOAD : 4,
 
   START : 1545 // 0x06, 0x09
 };
