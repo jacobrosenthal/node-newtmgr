@@ -1,11 +1,11 @@
 //stolen from https://github.com/maxogden/ble-stream
 var noble = require('noble')
-var from = require('from2')
+var from2 = require('from2')
 var through2 = require('through2')
 var duplexify = require('duplexify')
-var Readable = require('stream').Readable;
 var hasIn = require('lodash.hasin');
 var has = require('lodash.has');
+var BufferList = require('bl')
 var debug = require('debug')('newtmgr-ble')
 
 
@@ -33,20 +33,25 @@ function createStream (opts) {
       loop()
     };
 
-    var rs = Readable({objectMode: true});
-    rs._read = function () {};
+    // sadly bl as a read stream directly closes when it thinks its consumed
+    // but still handy for storing the buffer
+    var bl = new BufferList()
 
-    var onData = function(data, isNotification){
-      debug('onData', {length: data.length})
-      rs.push(data);
-    };
+    var output = function (size, cb) {
+      if (bl.length>0) {
+        var len = size > bl.length ? bl.length : size;
+        var data = bl.slice(0, len);
+        bl.consume(len);
+        cb(null, data);
+      } else {
+        ch.once('data', output.bind(null, size, cb));
+      }
+    }
 
-    ch.on('data', onData.bind(this));
+    ch.on('data', bl.append.bind(bl));
 
-    var something = through2(input);
-    something.on('end', function(){console.log("endeddd")})
-    stream.setWritable(something)
-    stream.setReadable(rs)
+    stream.setWritable(through2(input))
+    stream.setReadable(from2(output))
   }
 
   var onStateChange = function (state) {

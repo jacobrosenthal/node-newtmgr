@@ -22,9 +22,12 @@
     "noble": "^1.8.0"
   },
   "dependencies": {
+    "bl": "^1.2.0",
     "borc": "^2.0.2",
-    "concat-stream": "^1.6.0",
     "crc": "^3.4.4",
+    "debug": "^2.6.3",
+    "duplexify": "^3.5.0",
+    "flush-write-stream": "^1.0.2",
     "from2": "^2.3.0",
     "lodash.has": "^4.5.2",
     "lodash.hasin": "^4.5.2",

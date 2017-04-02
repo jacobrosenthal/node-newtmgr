@@ -170,4 +170,4 @@ function _deserialize(serializedBuffer){
 }
 
 
-module.exports = {generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate};
+module.exports = {generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};

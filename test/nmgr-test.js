@@ -5,7 +5,7 @@ var expect = chai.expect;
 chai.use(sinonChai);
 
 var from2 = require('from2');
-var concat = require('concat-stream');
+var to2 = require('flush-write-stream');
 
 var nmgr = require('../').nmgr;
 
@@ -67,7 +67,7 @@ describe('nmgr', function () {
     };
 
     from2([nmgr.generateResetBuffer()])
-      .pipe(concat(complete));
+      .pipe(to2(complete));
   });
 
 
@@ -82,25 +82,25 @@ describe('nmgr', function () {
   it('should accumulate', function (done) {
 
     var complete = function(data) {
-      expect(data[0]).to.deep.equal(listResponseNmrObject);
+      expect(data).to.deep.equal(listResponseNmrObject);
       done();
     };
 
     from2([listResponseSerialDecoded])
       .pipe(nmgr._accumulate())
-      .pipe(concat(complete));
+      .pipe(to2.obj(complete));
   });
 
 
   it('should decode', function (done) {
 
     var complete = function(data) {
-      expect(data[0]).to.deep.equal(listResponseCborObject);
+      expect(data).to.deep.equal(listResponseCborObject);
       done();
     };
 
     from2([listResponseSerialDecoded])
       .pipe(nmgr.decode())
-      .pipe(concat(complete));
+      .pipe(to2.obj(complete));
   });
 });

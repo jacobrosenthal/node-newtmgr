@@ -1,8 +1,8 @@
 #! /usr/bin/env node
 
-var through2 = require('through2');
 var from2 = require('from2');
 var argv = require('yargs').argv;
+var to2 = require('flush-write-stream');
 
 var nmgr = require('./').nmgr;
 var serial = require('./').serial;
@@ -24,99 +24,74 @@ if(argv.serial){
   stream = createStream({name:argv.ble, serviceUuid:NMGR_SVC_UUID, characteristicUuid: NMGR_CHAR_UUID});
 }
 
-stream.on('end', function(){
-  process.exit(0)
-})
-
-var listen = through2.obj(function (chunk, enc, callback) {
-  console.log(chunk);
-  process.exit(0)
-});
+var listen = function() {
+  return to2.obj(function (chunk, enc, callback) {
+    console.log(chunk);
+    callback();
+    process.exit(0)
+  })
+};
 
 if (argv.reset && argv.serial) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateResetBuffer()])
     .pipe(serial.encode())
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
     .pipe(listen);
 }
 
 if (argv.confirm && argv.serial) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateConfirmBuffer()])
     .pipe(serial.encode())
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
     .pipe(listen);
 }
 
 if (argv.list && argv.serial) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateListBuffer()])
     .pipe(serial.encode())
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.test && argv.serial) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateTestBuffer(argv.hash)])
     .pipe(serial.encode())
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
     .pipe(listen);
 }
 
 if (argv.reset && argv.ble) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateResetBuffer()])
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
     .pipe(listen);
 }
 
 if (argv.confirm && argv.ble) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateConfirmBuffer()])
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
     .pipe(listen);
 }
 
 if (argv.list && argv.ble) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateListBuffer()])
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.test && argv.ble) {
-  // from2 will close transport on you, so only use if you only want to do one operation
   from2([nmgr.generateTestBuffer(argv.hash)])
-    .pipe(stream);
-
-  stream
+    .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
     .pipe(listen);
 }
