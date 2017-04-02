@@ -38,7 +38,7 @@ if (argv.reset && argv.serial) {
     .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.confirm && argv.serial) {
@@ -47,7 +47,7 @@ if (argv.confirm && argv.serial) {
     .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.list && argv.serial) {
@@ -65,21 +65,21 @@ if (argv.test && argv.serial) {
     .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(serial.decode())
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.reset && argv.ble) {
   from2([nmgr.generateResetBuffer()])
     .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.confirm && argv.ble) {
   from2([nmgr.generateConfirmBuffer()])
     .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
 
 if (argv.list && argv.ble) {
@@ -93,5 +93,5 @@ if (argv.test && argv.ble) {
   from2([nmgr.generateTestBuffer(argv.hash)])
     .pipe(stream, {end: false}) //dont let from2 close stream
     .pipe(nmgr.decode())
-    .pipe(listen);
+    .pipe(listen());
 }
