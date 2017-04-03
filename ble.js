@@ -54,14 +54,14 @@ function createStream (opts) {
     stream.setReadable(from2(output))
   }
 
-  var onStateChange = function (state) {
-    debug('onStateChange')
-    if (state === 'poweredOn') {
-        noble.startScanning(opts, false)
-    } else {
-      noble.stopScanning()
-    }
-  }
+  // var onStateChange = function (state) {
+  //   debug('onStateChange')
+  //   if (state === 'poweredOn') {
+  //       noble.startScanning(opts, false)
+  //   } else {
+  //     noble.stopScanning()
+  //   }
+  // }
 
   var onDiscover = function (peripheral) {
     if(hasIn(peripheral, 'advertisement.localName') && has(opts, 'name') && (peripheral.advertisement.localName !== opts.name))
@@ -70,7 +70,7 @@ function createStream (opts) {
     }
     debug('onDiscover', peripheral.advertisement.localName)
 
-    noble.removeListener('stateChange', onStateChange)
+    // noble.removeListener('stateChange', onStateChange)
     noble.removeListener('discover', onDiscover)
     noble.stopScanning()
 
@@ -112,7 +112,8 @@ function createStream (opts) {
     peripheral.connect(onConnect.bind(this));
   }
 
-  noble.on('stateChange', onStateChange.bind(this))
+  noble.startScanning(opts, false)
+  // noble.on('stateChange', onStateChange.bind(this))
   noble.on('discover', onDiscover.bind(this))
 
   return stream
