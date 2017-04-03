@@ -57,11 +57,7 @@ function createStream (opts) {
   var onStateChange = function (state) {
     debug('onStateChange')
     if (state === 'poweredOn') {
-      if(opts && opts.name){
-        noble.startScanning([], false)
-      }else{
-        noble.startScanning([opts.serviceUuid], false)
-      }
+        noble.startScanning(opts, false)
     } else {
       noble.stopScanning()
     }
@@ -100,10 +96,10 @@ function createStream (opts) {
             return characteristics[0].subscribe(onSubscribe.bind(this));
           }
 
-        return services[0].discoverCharacteristics([opts.characteristicUuid], onDiscoverCharacteristics.bind(this));
+        return services[0].discoverCharacteristics(opts.characteristics, onDiscoverCharacteristics.bind(this));
       };
 
-      return peripheral.discoverServices([opts.serviceUuid], onDiscoverServices.bind(this));
+      return peripheral.discoverServices(opts.services, onDiscoverServices.bind(this));
     }
 
     var onDisconnect = function(err){

@@ -18,10 +18,12 @@ if(argv.serial){
   var noble = require('noble');
   var createStream = require('./ble');
 
-  var NMGR_SVC_UUID = '8d53dc1d1db74cd3868b8a527460aa84';
-  var NMGR_CHAR_UUID = 'da2e7828fbce4e01ae9e261174997c48';
-
-  stream = createStream({name:argv.ble, serviceUuid:NMGR_SVC_UUID, characteristicUuid: NMGR_CHAR_UUID});
+  var options = {
+    services: ['8d53dc1d1db74cd3868b8a527460aa84'],
+    characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
+    name: argv.ble
+  };
+  stream = createStream(options);
 }
 
 var listen = function() {
