@@ -1,58 +1,10 @@
-//stolen from https://github.com/maxogden/ble-stream
 var noble = require('noble')
-var from2 = require('from2')
-var through2 = require('through2')
-var duplexify = require('duplexify')
 var hasIn = require('lodash.hasin');
 var has = require('lodash.has');
-var BufferList = require('bl')
 var debug = require('debug')('newtmgr-ble')
 
 
-var MAX = 256
-
-module.exports = function (opts) {
-  return createStream(opts)
-}
-
-function createStream (opts) {
-  var stream = duplexify()
-
-  var ready = function (ch) {
-
-    var input = function (data, enc, cb) {
-      debug('onwrite', {length: data.length})
-      var offset = -MAX
-      var loop = function (err) {
-        if (err) return cb(err)
-        if (offset + MAX >= data.length) return cb()
-        offset += MAX
-        ch.write(data.slice(offset, offset + MAX), true, loop.bind(this))
-      }
-
-      loop()
-    };
-
-    // sadly bl as a read stream directly closes when it thinks its consumed
-    // but still handy for storing the buffer
-    var bl = new BufferList()
-
-    var output = function (size, cb) {
-      if (bl.length>0) {
-        var len = size > bl.length ? bl.length : size;
-        var data = bl.slice(0, len);
-        bl.consume(len);
-        cb(null, data);
-      } else {
-        ch.once('data', output.bind(null, size, cb));
-      }
-    }
-
-    ch.on('data', bl.append.bind(bl));
-
-    stream.setWritable(through2(input))
-    stream.setReadable(from2(output))
-  }
+var connect = function(opts, cb) {
 
   var onStateChange = function (state) {
     debug('onStateChange')
@@ -76,44 +28,47 @@ function createStream (opts) {
 
     var onConnect = function (err) {
       debug('onConnect', err)
-      if (err) return stream.destroy(err)
+      if (err) return cb(err)
 
       var onDiscoverServices = function (err, services) {
         debug('onDiscoverServices', err)
-        if (err) return stream.destroy(err)
+        if (err) return cb(err)
 
           var onDiscoverCharacteristics = function (err, characteristics) {
             debug('onDiscoverCharacteristics', err)
-            if (err) return stream.destroy(err)
+            if (err) return cb(err)
 
             var onSubscribe = function(err){
               debug('onSubscribe', err)
-              if (err) return stream.destroy(err)
+              if (err) return cb(err)
 
-              return ready(characteristics[0]);
+              return cb(null, characteristics[0]);
             }
 
-            return characteristics[0].subscribe(onSubscribe.bind(this));
+            return characteristics[0].subscribe(onSubscribe);
           }
 
-        return services[0].discoverCharacteristics(opts.characteristics, onDiscoverCharacteristics.bind(this));
+        return services[0].discoverCharacteristics(opts.characteristics, onDiscoverCharacteristics);
       };
 
-      return peripheral.discoverServices(opts.services, onDiscoverServices.bind(this));
+      return peripheral.discoverServices(opts.services, onDiscoverServices);
     }
 
-    var onDisconnect = function(err){
-      debug('onDisconnect', err);
-      // ch.removeListener('data', onData);
-      stream.push(null)
-    }
+   var onDisconnect = function(err){
+    debug('onDisconnect', err);
+   }
 
-    peripheral.once('disconnect', onDisconnect.bind(this));
-    peripheral.connect(onConnect.bind(this));
+    peripheral.once('disconnect', onDisconnect);
+    peripheral.connect(onConnect);
   }
 
-  noble.on('stateChange', onStateChange.bind(this))
-  noble.on('discover', onDiscover.bind(this))
+  noble.on('stateChange', onStateChange)
+  noble.on('discover', onDiscover)
 
-  return stream
+  //hack for webble, whose statechange isnt good yet
+  if(opts && opts.nowait){
+    noble.emit('stateChange', 'poweredOn');
+  }
 }
+
+module.exports = {connect}
