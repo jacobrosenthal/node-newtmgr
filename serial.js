@@ -3,9 +3,9 @@
 var crc = require('crc');
 var through2 = require('through2');
 var pipeline = require('pumpify');
+var Pushable = require('pull-pushable')
 
 var split2 = require("split2");
-
 
 var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr-serial')
@@ -147,5 +147,42 @@ var _encode = function() {
   return through2(transform);
 }
 
+//pull-stream sink for already opened serialport
+function writerPull (port) {
+  return function (read) {
+    read(null, function next(end, data) {
+      debug("write request")
+      if(end === true) debug("writer ending")
+      if(end === true) return
+      if(end) throw end
 
-module.exports = {encode, decode, _accumulatePacket, _decode, _encode, _fragmentPacket};
+      debug("writing")
+      port.write(data, function(err){
+        if(err) debug("writer ending")
+        if(err) return read(true, next)
+        debug("write pull next")
+        return read(null, next)
+      });
+    })
+  }
+}
+
+// easier methond of {sink: ble.writer(characteristic), source: toPull.source(characteristic)},
+// gives the wrapped node-stream does not implement `destroy`, this may cause resource leaks.
+// (node:6856) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 close listeners added. Use emitter.setMaxListeners() to increase limit
+// so listen and unlisten ourselves
+function duplexPull (port){
+
+  var p = Pushable(function (err) {
+    port.removeListener('data', onData)
+  })
+
+  var onData = function(data){
+    p.push(data)
+  }
+
+  port.on('data', onData);
+  return {sink: writerPull(port), source: p};
+}
+
+module.exports = {encode, decode, _accumulatePacket, _decode, _encode, _fragmentPacket, writerPull, duplexPull};

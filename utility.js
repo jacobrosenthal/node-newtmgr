@@ -1,5 +1,6 @@
 var through2 = require('through2');
 var from2 = require('from2');
+var through = require('pull-through')
 
 var hashToString = function(currentValue, index, array){
   if(currentValue.hash){
@@ -20,15 +21,18 @@ var hashToStringTransform = function() {
   return through2.obj(transform);
 }
 
-//so we have a huge issue here mapping something like ble with listeners to streams
-//in that we dont know when we're done receiving data.. In fact we wont know until read finishes processing
-//so its your job to hold this return and push(null) to it to close
-function emitterStream(emitter) {
-  return from2.obj(function(size, cb) {
-    emitter.once('data', function(data){
-      cb(null, data);
-    });
-  });
+function throughLogPull(){
+  function transform(data) {
+    console.log(data)
+    this.queue(data)
+  }
+
+  function flush(end) {
+    debug("throughLogPull ending");
+    this.queue(null)
+  }
+
+  return through(transform,flush);
 }
 
-module.exports = {hashToStringTransform, emitterStream}
+module.exports = {hashToStringTransform, throughLogPull}
