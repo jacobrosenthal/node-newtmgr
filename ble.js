@@ -2,7 +2,9 @@ var noble = require('noble')
 var hasIn = require('lodash.hasin');
 var has = require('lodash.has');
 var debug = require('debug')('newtmgr-ble')
-
+var duplexify = require('duplexify')
+var from2 = require('from2');
+var to2 = require('flush-write-stream');
 
 var connect = function(opts, cb) {
 
@@ -71,4 +73,33 @@ var connect = function(opts, cb) {
   }
 }
 
-module.exports = {connect}
+var duplex = function(characteristic){
+
+  var rs = from2();
+
+  var output = function(data, enc, cb){
+    characteristic.write(data, true, function(err){
+      if (err) return cb(err)
+      cb()
+    });
+  };
+  var ws = to2(output)
+
+  var dup = duplexify(ws, rs);
+
+  var onData = function(data){
+    rs.push(data);
+  }
+
+  characteristic.on('data', onData);
+
+  dup.on('finish', function(){
+    characteristic.removeListener('data', onData);
+    rs.push(null);
+  });
+
+  return dup;
+}
+
+
+module.exports = {connect, duplex}

@@ -3,20 +3,60 @@
 var argv = require('yargs').argv;
 var from2 = require('from2');
 var to2 = require('flush-write-stream');
-var through2 = require('through2');
 
 var nmgr = require('./').nmgr;
 var utility = require('./').utility;
 
+
+if (argv.reset) {
+  var cmdList = [nmgr.generateResetBuffer()]
+}
+
+if (argv.confirm) {
+  var cmdList = [nmgr.generateConfirmBuffer(argv.hash)]
+}
+
+if (argv.list) {
+  var cmdList = [nmgr.generateListBuffer()]
+}
+
+if (argv.test) {
+  var cmdList = [nmgr.generateTestBuffer(argv.hash)]
+}
+
 if(argv.serial){
+
   var SerialPort = require('serialport');
   var serial = require('./').serial;
 
-  var stream = new SerialPort(argv.serial, {
-    baudRate: 115200
+  var port;
+  port = new SerialPort(argv.serial, { baudRate: 115200 }, function(){
+
+    var sourcer = from2();
+    sourcer.push(cmdList.shift());
+
+    sourcer
+      .pipe(serial.encode())
+      .pipe(serial.duplex(port))
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(utility.hashToStringTransform())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        var cmd = cmdList.shift()
+        if(!cmd){
+          sourcer.push(null); //close readable
+          this.end(); // flush writable
+        }else{
+          sourcer.push(cmd);
+        }
+        cb(); //callback writable
+        }, process.exit)
+      );
   });
-  goSerial(null, stream)
+
 }else if(argv.ble){
+
   var noble = require('noble');
   var ble = require('./').ble;
 
@@ -25,188 +65,26 @@ if(argv.serial){
     characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
     name: argv.ble
   };
-  ble.connect(options, goBle);
-}
+  ble.connect(options, function(err, characteristic){
 
-function goSerial (err, port) {
-  if (argv.reset) {
-    from2([nmgr.generateResetBuffer()])
-      .pipe(serial.encode())
-      .pipe(port)
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
+    var sourcer = from2();
+    sourcer.push(cmdList.shift());
 
-  if (argv.confirm) {
-    from2([nmgr.generateConfirmBuffer()])
-      .pipe(serial.encode())
-      .pipe(port)
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-  if (argv.list) {
-    from2([nmgr.generateListBuffer()])
-      .pipe(serial.encode())
-      .pipe(port)
-      .pipe(serial.decode())
+    sourcer
+      .pipe(ble.duplex(characteristic))
       .pipe(nmgr.decode())
       .pipe(utility.hashToStringTransform())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-  if (argv.test) {
-    from2([nmgr.generateTestBuffer(argv.hash)])
-      .pipe(serial.encode())
-      .pipe(port)
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-  if (argv.testandreset) {
-
-    var next = function(){
-
-      from2([nmgr.generateResetBuffer()])
-        .pipe(serial.encode())
-        .pipe(port, {end:false}) //dont let from2 close port
-
-      var stream = utility.emitterStream(port);
-       stream
-        .pipe(serial.decode())
-        .pipe(nmgr.decode())
-        .pipe(to2.obj(function (chunk, enc, callback) {
-          stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-          console.log(chunk);
-          callback();
-          process.exit(0);
-        }));
-    }
-
-    from2([nmgr.generateTestBuffer(argv.hash)])
-      .pipe(serial.encode())
-      .pipe(port, {end:false}) //dont let from2 close port
-
-    var stream = utility.emitterStream(port);
-     stream
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-        console.log(chunk);
-        callback();
-        //until I find a way to pause streams from hardware devices ...
-        next();
-      }));
-  }
-}
-
-function goBle (err, characteristic) {
-
-  if (argv.reset) {
-    characteristic.write(nmgr.generateResetBuffer(), true);
-
-    var stream = utility.emitterStream(characteristic);
-    stream
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-  if (argv.confirm) {
-    characteristic.write(nmgr.generateConfirmBuffer(), true);
-
-    var stream = utility.emitterStream(characteristic);
-    stream
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-  if (argv.list) {
-    characteristic.write(nmgr.generateListBuffer(), true);
-
-    var stream = utility.emitterStream(characteristic);
-    stream
-      .pipe(nmgr.decode())
-      .pipe(utility.hashToStringTransform())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-  if (argv.test) {
-    characteristic.write(nmgr.generateTestBuffer(argv.hash), true);
-
-    var stream = utility.emitterStream(characteristic);
-    stream
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-        console.log(chunk);
-        callback();
-        process.exit(0);
-      }));
-  }
-
-
-  if (argv.testandreset) {
-
-    var next = function(){
-      characteristic.write(nmgr.generateResetBuffer(argv.hash), true);
-
-      var stream = utility.emitterStream(characteristic);
-      stream
-        .pipe(nmgr.decode())
-        .pipe(to2.obj(function (chunk, enc, callback) {
-          stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-          console.log(chunk);
-          callback();
-          process.exit(0);
-        }));
-    }
-
-    characteristic.write(nmgr.generateTestBuffer(argv.hash), true);
-
-    var stream = utility.emitterStream(characteristic);
-    stream
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (chunk, enc, callback) {
-        stream.push(null); //close previous instance of emitterStream so we dont have dangling listeners
-        console.log(chunk);
-        callback();
-        //until I find a way to pause streams from hardware devices ... 
-        next();
-      }));
-  }
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        var cmd = cmdList.shift()
+        if(!cmd){
+          sourcer.push(null); //close readable
+          this.end(); // flush writable
+        }else{
+          sourcer.push(cmd);
+        }
+        cb(); //callback writable
+        }, process.exit)
+      );
+  });
 }

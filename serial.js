@@ -1,11 +1,12 @@
 'use strict';
 
 var crc = require('crc');
-var through2 = require('through2');
 var pipeline = require('pumpify');
-
 var split2 = require("split2");
-
+var duplexify = require('duplexify')
+var from2 = require('from2');
+var to2 = require('flush-write-stream');
+var through2 = require('through2');
 
 var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr-serial')
@@ -147,5 +148,33 @@ var _encode = function() {
   return through2(transform);
 }
 
+var duplex = function(port){
 
-module.exports = {encode, decode, _accumulatePacket, _decode, _encode, _fragmentPacket};
+  var rs = from2();
+
+  var output = function(data, enc, cb){
+    port.write(data, function(err){
+      if (err) return cb(err)
+      cb()
+    });
+  };
+  var ws = to2(output)
+
+  var dup = duplexify(ws, rs);
+
+  var onData = function(data){
+    rs.push(data);
+  }
+
+  port.on('data', onData);
+
+  dup.on('finish', function(){
+    port.removeListener('data', onData);
+    rs.push(null);
+  });
+
+  return dup;
+}
+
+
+module.exports = {encode, decode, _accumulatePacket, _decode, _encode, _fragmentPacket, duplex};
