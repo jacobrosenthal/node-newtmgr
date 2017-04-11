@@ -18,7 +18,7 @@ function generateTestBuffer(hash)
   cmd.hash = new Buffer(hash, "hex")
   var encoded = cbor.encode(cmd)
 
-  nmr = {};
+  var nmr = {};
   nmr.Data = encoded;
   nmr.Op = CONSTANTS.NMGR_OP_WRITE;
   nmr.Flags = 0;
@@ -43,7 +43,7 @@ function generateConfirmBuffer(hash)
   cmd.hash = hashBuffer
   var encoded = cbor.encode(cmd)
 
-  nmr = {};
+  var nmr = {};
   nmr.Data = encoded;
   nmr.Op = CONSTANTS.NMGR_OP_WRITE;
   nmr.Flags = 0;
@@ -58,7 +58,7 @@ function generateConfirmBuffer(hash)
 
 function generateResetBuffer()
 {
-  nmr = {};
+  var nmr = {};
   nmr.Data = Buffer.from("{}");
   nmr.Op = CONSTANTS.NMGR_OP_WRITE;
   nmr.Flags = 0;
@@ -73,7 +73,7 @@ function generateResetBuffer()
 
 function generateListBuffer()
 {
-  nmr = {};
+  var nmr = {};
   nmr.Data = Buffer.alloc(0)
   nmr.Op = CONSTANTS.NMGR_OP_READ;
   nmr.Flags = 0;
@@ -83,6 +83,68 @@ function generateListBuffer()
   nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
 
   return _serialize(nmr);
+}
+
+
+//  var cmd = {echo: 0}
+function generateEchoBuffer(cmd){
+
+  var encoded = cbor.encode(cmd)
+
+  var nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_DEFAULT;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.NMGR_ID_CONS_ECHO_CTRL;
+
+  return _serialize(nmr);
+}
+
+// var cmd = {}
+// cmd.data = Buffer.from([0x3c, 0xb8, 0xf3, 0x96, 0x24, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x48, 0x10, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x20, 0x29, 0x38, 0x02, 0x00, 0x00, 0x1a, 0x80, 0xf3, 0x14, 0x88, 0x80, 0xf3, 0x10, 0x88, 0x03, 0x21, 0x18, 0x48, 0x02, 0x68]);
+// cmd.len = 4236;
+// cmd.off = 0;
+function generateImageUploadBuffer(cmd){
+  var encoded = cbor.encode(cmd)
+
+  var nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_UPLOAD;
+
+  return _serialize(nmr);
+}
+
+
+function imageUploadEncoder(fileSize) {
+  var currOff  = 0
+
+  function transform(data, enc, cb) {
+    debug("imageUploadEncoder", data.toString('hex'));
+
+    var imageUpload = {}
+    imageUpload.off = currOff
+    imageUpload.data = data;
+
+    //only send len on first packet
+    if (currOff === 0){
+      imageUpload.len = fileSize;
+    }
+
+    currOff+=data.length;;
+
+    var imageUploadBuffer = generateImageUploadBuffer(imageUpload);
+    return cb(null, imageUploadBuffer);
+  }
+
+  return through2(transform, function(cb){debug("flush imageUploadEncoder");cb()});
 }
 
 
@@ -116,7 +178,7 @@ function _decode() {
     return cb(null, decoded);
   }
 
-  return through2.obj(transform);
+  return through2.obj(transform, function(cb){debug("flush _decode");cb()});
 }
 
 function _accumulate() {
@@ -153,7 +215,7 @@ function _accumulate() {
     return cb();
   }
 
-  return through2.obj(transform);
+  return through2.obj(transform, function(cb){debug("flush _accumulate");cb()});
 }
 
 
@@ -169,5 +231,4 @@ function _deserialize(serializedBuffer){
   return nmr;
 }
 
-
-module.exports = {generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
+module.exports = {generateEchoBuffer, imageUploadEncoder, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};

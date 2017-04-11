@@ -1,6 +1,7 @@
 var through2 = require('through2');
 var from2 = require('from2');
 var through = require('pull-through')
+var debug = require('debug')('newtmgr-utility')
 
 var hashToString = function(currentValue, index, array){
   if(currentValue.hash){
@@ -35,4 +36,28 @@ function throughLogPull(){
   return through(transform,flush);
 }
 
-module.exports = {hashToStringTransform, throughLogPull}
+
+function gater(){
+  var first = true;
+
+  var transform = function(data, enc, cb){
+    if(first){
+      debug("gater call");
+      first = false;
+      return cb(null, data);
+    }else{
+
+      var dogs = function(){
+        debug('gater next');
+        cb(null, data);
+      };
+
+      debug("gater delay", data);
+      this.once('next', dogs.bind(this))
+    }
+  };
+  return through2(transform, function(cb){debug("gater flushing");cb()});
+}
+
+
+module.exports = {hashToStringTransform, throughLogPull, gater}
