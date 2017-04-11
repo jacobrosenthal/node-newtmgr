@@ -1,21 +1,13 @@
 var through2 = require('through2');
-const cbor = require('borc')
+var cbor = require('borc')
 var pipeline = require('pumpify');
 
 var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr')
 
 
-function generateTestBuffer(hash)
+function generateTestBuffer(cmd)
 {
-  if(!hash || typeof hash !=="string")
-  {
-    throw new Error("must supply hash as string")
-  }
-
-  var cmd = {}
-  cmd.confirm = false;
-  cmd.hash = new Buffer(hash, "hex")
   var encoded = cbor.encode(cmd)
 
   var nmr = {};
@@ -33,14 +25,6 @@ function generateTestBuffer(hash)
 
 function generateConfirmBuffer(hash)
 {
-  var hashBuffer = null;
-  if(hash && typeof hash === "string"){
-    hashBuffer = new Buffer(hash, "hex")
-  }
-
-  var cmd = {}
-  cmd.confirm = true;
-  cmd.hash = hashBuffer
   var encoded = cbor.encode(cmd)
 
   var nmr = {};
@@ -103,6 +87,7 @@ function generateEchoBuffer(cmd){
   return _serialize(nmr);
 }
 
+
 // var cmd = {}
 // cmd.data = Buffer.from([0x3c, 0xb8, 0xf3, 0x96, 0x24, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x48, 0x10, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x20, 0x29, 0x38, 0x02, 0x00, 0x00, 0x1a, 0x80, 0xf3, 0x14, 0x88, 0x80, 0xf3, 0x10, 0x88, 0x03, 0x21, 0x18, 0x48, 0x02, 0x68]);
 // cmd.len = 4236;
@@ -123,11 +108,11 @@ function generateImageUploadBuffer(cmd){
 }
 
 
-function imageUploadEncoder(fileSize) {
+function imageUploadTransform(fileSize) {
   var currOff  = 0
 
   function transform(data, enc, cb) {
-    debug("imageUploadEncoder", data.toString('hex'));
+    debug("imageUploadTransform", data.toString('hex'));
 
     var imageUpload = {}
     imageUpload.off = currOff
@@ -144,7 +129,7 @@ function imageUploadEncoder(fileSize) {
     return cb(null, imageUploadBuffer);
   }
 
-  return through2.obj(transform, function(cb){debug("flush imageUploadEncoder");cb()});
+  return through2.obj(transform, function(cb){debug("flush imageUploadTransform");cb()});
 }
 
 
@@ -180,6 +165,7 @@ function _decode() {
 
   return through2.obj(transform, function(cb){debug("flush _decode");cb()});
 }
+
 
 function _accumulate() {
   var header;
@@ -231,4 +217,4 @@ function _deserialize(serializedBuffer){
   return nmr;
 }
 
-module.exports = {generateEchoBuffer, imageUploadEncoder, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
+module.exports = {generateEchoBuffer, imageUploadTransform, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
