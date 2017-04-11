@@ -21,35 +21,31 @@ if (argv.list) {
 }
 
 if (argv.test) {
-  var cmdList = [nmgr.generateTestBuffer(argv.hash)]
+  var cmdList = [nmgr.generateTestBuffer(argv.hash)];
+}
+
+if(argv.hasOwnProperty("echo")){
+  var cmdList = [nmgr.generateEchoBuffer({echo: argv.echo})];
 }
 
 if(argv.serial){
 
-  var SerialPort = require('serialport');
+  var SerialPort = require("serialport").SerialPort
   var serial = require('./').serial;
 
-  var port;
-  port = new SerialPort(argv.serial, { baudRate: 115200 }, function(){
+  var port = new SerialPort(argv.serial, { baudRate: 115200 }, function(){
 
-    var sourcer = from2();
-    sourcer.push(cmdList.shift());
+    var dup = serial.duplex(port)
 
-    sourcer
+    from2(cmdList)
       .pipe(serial.encode())
-      .pipe(serial.duplex(port))
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(serial.decode())
       .pipe(nmgr.decode())
       .pipe(utility.hashToStringTransform())
       .pipe(to2.obj(function (data, enc, cb) {
         console.log(data);
-        var cmd = cmdList.shift()
-        if(!cmd){
-          sourcer.push(null); //close readable
-          this.end(); // flush writable
-        }else{
-          sourcer.push(cmd);
-        }
+        dup.end(); //since we blocked ending, manually end
         cb(); //callback writable
         }, process.exit)
       );
@@ -67,22 +63,15 @@ if(argv.serial){
   };
   ble.connect(options, function(err, characteristic){
 
-    var sourcer = from2();
-    sourcer.push(cmdList.shift());
+    var dup = ble.duplex(characteristic)
 
-    sourcer
-      .pipe(ble.duplex(characteristic))
+    from2(cmdList)
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(nmgr.decode())
       .pipe(utility.hashToStringTransform())
       .pipe(to2.obj(function (data, enc, cb) {
         console.log(data);
-        var cmd = cmdList.shift()
-        if(!cmd){
-          sourcer.push(null); //close readable
-          this.end(); // flush writable
-        }else{
-          sourcer.push(cmd);
-        }
+        dup.end(); //since we blocked ending, manually end
         cb(); //callback writable
         }, process.exit)
       );
