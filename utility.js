@@ -56,7 +56,7 @@ function gater(){
       this.once('next', dogs.bind(this))
     }
   };
-  return through2(transform, function(cb){debug("gater flushing");cb()});
+  return through2.obj(transform, function(cb){debug("gater flushing");cb()});
 }
 
 

@@ -37,7 +37,7 @@ if(argv.serial){
 
     var dup = serial.duplex(port)
 
-    from2(cmdList)
+    from2.obj(cmdList)
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(serial.decode())
@@ -65,7 +65,7 @@ if(argv.serial){
 
     var dup = ble.duplex(characteristic)
 
-    from2(cmdList)
+    from2.obj(cmdList)
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(nmgr.decode())
       .pipe(utility.hashToStringTransform())

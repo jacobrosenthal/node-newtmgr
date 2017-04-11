@@ -78,7 +78,7 @@ var connect = function(opts, cb) {
 
 var duplex = function(characteristic){
 
-  var rs = from2();
+  var rs = from2.obj();
 
   var output = function(data, enc, cb){
     characteristic.write(data, true, function(err){
@@ -86,9 +86,9 @@ var duplex = function(characteristic){
       cb()
     });
   };
-  var ws = to2(output)
+  var ws = to2.obj(output)
 
-  var dup = duplexify(ws, rs);
+  var dup = duplexify.obj(ws, rs);
 
   var onData = function(data){
     rs.push(data);

@@ -25,6 +25,10 @@ var _accumulatePacket = function() {
   function transform(data, enc, cb) {
     debug("_accumulatePacket", data.toString('hex'));
 
+    if("string" === typeof data){
+     data = Buffer.from(data);
+    }
+
     var type = data.readUInt16BE(0);
     var base64DataString = data.slice(2).toString('ascii');
     var msgData = new Buffer(base64DataString, 'base64');
@@ -45,7 +49,7 @@ var _accumulatePacket = function() {
     return cb();
   }
 
-  return through2(transform, function(cb){debug("flush _accumulatePacket");cb()});
+  return through2.obj(transform, function(cb){debug("flush _accumulatePacket");cb()});
 }
 
 
@@ -65,7 +69,7 @@ var _decode = function() {
     }
   }
 
-  return through2(transform, function(cb){debug("flush _decode");cb()});
+  return through2.obj(transform, function(cb){debug("flush _decode");cb()});
 }
 
 
@@ -120,7 +124,7 @@ var _fragmentPacket = function() {
     return cb();
   }
 
-  return through2(transform, function(cb){debug("flush _fragmentPacket");cb()});
+  return through2.obj(transform, function(cb){debug("flush _fragmentPacket");cb()});
 }
 
 
@@ -146,13 +150,13 @@ var _encode = function() {
     return cb(null, new Buffer(base64DataString));
   }
 
-  return through2(transform, function(cb){debug("flush _encode");cb()});
+  return through2.obj(transform, function(cb){debug("flush _encode");cb()});
 }
 
 
 var duplex = function(port){
 
-  var rs = from2();
+  var rs = from2.obj();
 
   var output = function(data, enc, cb){
     debug("rs writing", data.toString('hex'))
@@ -162,7 +166,7 @@ var duplex = function(port){
       cb()
     });
   };
-  var ws = to2(output)
+  var ws = to2.obj(output)
 
   ws.on('finish', function(){
     debug("ws finish")
@@ -172,7 +176,7 @@ var duplex = function(port){
     debug("rs finish")
   })
 
-  var dup = duplexify(ws, rs);
+  var dup = duplexify.obj(ws, rs);
 
   var onData = function(data){
     rs.push(data);

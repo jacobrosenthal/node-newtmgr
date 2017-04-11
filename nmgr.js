@@ -144,7 +144,7 @@ function imageUploadEncoder(fileSize) {
     return cb(null, imageUploadBuffer);
   }
 
-  return through2(transform, function(cb){debug("flush imageUploadEncoder");cb()});
+  return through2.obj(transform, function(cb){debug("flush imageUploadEncoder");cb()});
 }
 
 
