@@ -10,7 +10,7 @@ var nmgr = require('./').nmgr;
 var utility = require('./').utility;
 
 
-if(argv.serial){
+if(argv.hasOwnProperty("serial")){
   var SerialPort = require("serialport").SerialPort
   var serial = require('./').serial;
 
@@ -18,7 +18,7 @@ if(argv.serial){
     goSerial(null, port);
   });
 
-}else if(argv.ble){
+}else if(argv.hasOwnProperty("ble")){
   var noble = require('noble');
   var ble = require('./').ble;
 
@@ -33,7 +33,7 @@ if(argv.serial){
 
 var goSerial = function(err, port){
 
-  if (argv.reset) {
+  if(argv.hasOwnProperty("reset")){
     var dup = serial.duplex(port);
     from2.obj([nmgr.generateResetBuffer()])
       .pipe(serial.encode())
@@ -48,7 +48,7 @@ var goSerial = function(err, port){
       );
   }
 
-  if (argv.confirm) {
+  if(argv.hasOwnProperty("confirm")){
     var dup = serial.duplex(port);
     var cmd = {};
     cmd.confirm = true;
@@ -66,7 +66,7 @@ var goSerial = function(err, port){
       );
   }
 
-  if (argv.list) {
+  if(argv.hasOwnProperty("list")){
     var dup = serial.duplex(port);
     from2.obj([nmgr.generateListBuffer()])
       .pipe(serial.encode())
@@ -82,7 +82,7 @@ var goSerial = function(err, port){
       );
   }
 
-  if (argv.test) {
+  if(argv.hasOwnProperty("confirm")){
     var cmd = {};
     cmd.confirm = false;
     cmd.hash = Buffer.from(argv.hash);
@@ -115,7 +115,7 @@ var goSerial = function(err, port){
       );
   }
 
-  if(argv.upload){
+  if(argv.hasOwnProperty("upload")){
     var fileSize = fs.statSync(argv.upload).size;
 
     //they set this to 64 for serial?! but were already fragmenting in serial, ive seen up to 424 on osx serial work here..
@@ -153,7 +153,7 @@ var goSerial = function(err, port){
 
 var goBle = function(err, characteristic){
 
-  if (argv.reset) {
+  if(argv.hasOwnProperty("reset")){
     var dup = ble.duplex(characteristic);
     from2.obj([nmgr.generateResetBuffer()])
     .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
@@ -166,7 +166,7 @@ var goBle = function(err, characteristic){
     );
   }
 
-  if (argv.confirm) {
+  if(argv.hasOwnProperty("confirm")){
     var dup = ble.duplex(characteristic);
     var cmd = {};
     cmd.confirm = true;
@@ -182,7 +182,7 @@ var goBle = function(err, characteristic){
     );
   }
 
-  if (argv.list) {
+  if(argv.hasOwnProperty("list")){
     var dup = ble.duplex(characteristic);
     from2.obj([nmgr.generateListBuffer()])
     .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
@@ -196,7 +196,7 @@ var goBle = function(err, characteristic){
     );
   }
 
-  if (argv.test) {
+  if(argv.hasOwnProperty("test")){
     var dup = ble.duplex(characteristic);
     var cmd = {};
     cmd.confirm = false;
@@ -227,10 +227,11 @@ var goBle = function(err, characteristic){
     );
   }
 
-  if(argv.upload){
+  if(argv.hasOwnProperty("upload")){
     var dup = ble.duplex(characteristic);
     var fileSize = fs.statSync(argv.upload).size;
 
+    //has to be 32 or larger or imgmgr returns rc: 3
     //they set this to 64 for serial?! but were already fragmenting in serial, ive seen up to 424 on osx serial work here..
     var maxFrag = 424;
 
