@@ -97,9 +97,26 @@ var goSerial = function(err, port){
   }
 
   if(argv.hasOwnProperty("log_show")){
-    var cmd = { index: 0, log_name: argv.logshow, ts: 0 };
+    var cmd = { index: 0, log_name: argv.log_show, ts: 0 };
     var dup = serial.duplex(port);
     from2.obj([nmgr.generateLogShowBuffer(cmd)])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("echo")){
+    var dup = serial.duplex(port);
+    var cmd = {};
+    cmd.echo = argv.echo;
+    from2.obj([nmgr.generateEchoBuffer(cmd)])
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(serial.decode())
@@ -127,12 +144,12 @@ var goSerial = function(err, port){
       );
   }
 
-  if(argv.hasOwnProperty("confirm")){
+  if(argv.hasOwnProperty("image_confirm")){
     var dup = serial.duplex(port);
     var cmd = {};
     cmd.confirm = true;
-    cmd.hash = Buffer.from(argv.hash);
-    from2.obj([nmgr.generateConfirmBuffer(cmd)])
+    cmd.hash = Buffer.from(argv.image_hash);
+    from2.obj([nmgr.generateImageConfirmBuffer(cmd)])
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(serial.decode())
@@ -145,9 +162,9 @@ var goSerial = function(err, port){
       );
   }
 
-  if(argv.hasOwnProperty("list")){
+  if(argv.hasOwnProperty("image_list")){
     var dup = serial.duplex(port);
-    from2.obj([nmgr.generateListBuffer()])
+    from2.obj([nmgr.generateImageListBuffer()])
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(serial.decode())
@@ -161,29 +178,9 @@ var goSerial = function(err, port){
       );
   }
 
-  if(argv.hasOwnProperty("confirm")){
+  if(argv.hasOwnProperty("image_corelist")){
     var dup = serial.duplex(port);
-    var cmd = {};
-    cmd.confirm = false;
-    cmd.hash = Buffer.from(argv.hash);
-    from2.obj([nmgr.generateConfirmBuffer(cmd)])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-    }
-
-  if(argv.hasOwnProperty("echo")){
-    var dup = serial.duplex(port);
-    var cmd = {};
-    cmd.echo = argv.echo;
-    from2.obj([nmgr.generateEchoBuffer(cmd)])
+    from2.obj([nmgr.generateImageCoreListBuffer()])
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(serial.decode())
@@ -196,8 +193,26 @@ var goSerial = function(err, port){
       );
   }
 
-  if(argv.hasOwnProperty("upload")){
-    var fileSize = fs.statSync(argv.upload).size;
+  if(argv.hasOwnProperty("image_test")){
+    var dup = serial.duplex(port);
+    var cmd = {};
+    cmd.confirm = false;
+    cmd.hash = Buffer.from(argv.image_hash);
+    from2.obj([nmgr.generateImageTestBuffer(cmd)])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+    }
+
+  if(argv.hasOwnProperty("image_upload")){
+    var fileSize = fs.statSync(argv.image_upload).size;
 
     //they set this to 64 for serial?! but were already fragmenting in serial, ive seen up to 424 on osx serial work here..
     var maxFrag = 424;
@@ -205,7 +220,7 @@ var goSerial = function(err, port){
     var gate = utility.gater();
     var dup = serial.duplex(port);
 
-    fs.createReadStream(argv.upload)
+    fs.createReadStream(argv.image_upload)
       .pipe(block({ size: maxFrag, zeroPadding: false }))
       .pipe(gate) //gate one block and thus one command at a time
       .pipe(nmgr.imageUploadTransform(fileSize))
@@ -309,9 +324,24 @@ var goBle = function(err, characteristic){
   }
 
   if(argv.hasOwnProperty("log_show")){
-    var cmd = { index: 0, log_name: argv.logshow, ts: 0 };
+    var cmd = { index: 0, log_name: argv.log_show, ts: 0 };
     var dup = ble.duplex(characteristic);
     from2.obj([nmgr.generateLogShowBuffer(cmd)])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("echo")){
+    var dup = ble.duplex(characteristic);
+    var cmd = {};
+    cmd.echo = argv.echo;
+    from2.obj([nmgr.generateEchoBuffer(cmd)])
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(nmgr.decode())
       .pipe(to2.obj(function (data, enc, cb) {
@@ -325,80 +355,78 @@ var goBle = function(err, characteristic){
   if(argv.hasOwnProperty("reset")){
     var dup = ble.duplex(characteristic);
     from2.obj([nmgr.generateResetBuffer()])
-    .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-    .pipe(nmgr.decode())
-    .pipe(to2.obj(function (data, enc, cb) {
-      console.log(data);
-      dup.end(); //since we blocked ending, manually end
-      cb(); //callback writable
-      }, process.exit)
-    );
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
   }
 
-  if(argv.hasOwnProperty("confirm")){
+  if(argv.hasOwnProperty("image_confirm")){
     var dup = ble.duplex(characteristic);
     var cmd = {};
     cmd.confirm = true;
-    cmd.hash = Buffer.from(argv.hash);
-    from2.obj([nmgr.generateConfirmBuffer(cmd)])
-    .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-    .pipe(nmgr.decode())
-    .pipe(to2.obj(function (data, enc, cb) {
-      console.log(data);
-      dup.end(); //since we blocked ending, manually end
-      cb(); //callback writable
-      }, process.exit)
-    );
+    cmd.hash = Buffer.from(argv.image_hash);
+    from2.obj([nmgr.generateImageConfirmBuffer(cmd)])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
   }
 
-  if(argv.hasOwnProperty("list")){
+  if(argv.hasOwnProperty("image_list")){
     var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateListBuffer()])
-    .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-    .pipe(nmgr.decode())
-    .pipe(utility.hashToStringTransform())
-    .pipe(to2.obj(function (data, enc, cb) {
-      console.log(data);
-      dup.end(); //since we blocked ending, manually end
-      cb(); //callback writable
-      }, process.exit)
-    );
+    from2.obj([nmgr.generateImageListBuffer()])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(utility.hashToStringTransform())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
   }
 
-  if(argv.hasOwnProperty("test")){
+  if(argv.hasOwnProperty("image_corelist")){
+    var dup = ble.duplex(characteristic);
+    from2.obj([nmgr.generateImageCoreListBuffer()])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("image_test")){
     var dup = ble.duplex(characteristic);
     var cmd = {};
     cmd.confirm = false;
-    cmd.hash = Buffer.from(argv.hash);
-    from2.obj([nmgr.generateTestBuffer(cmd)])
-    .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-    .pipe(nmgr.decode())
-    .pipe(to2.obj(function (data, enc, cb) {
-      console.log(data);
-      dup.end(); //since we blocked ending, manually end
-      cb(); //callback writable
-      }, process.exit)
-    );
+    cmd.hash = Buffer.from(argv.image_hash);
+    from2.obj([nmgr.generateImageTestBuffer(cmd)])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
   }
 
-  if(argv.hasOwnProperty("echo")){
+  if(argv.hasOwnProperty("image_upload")){
     var dup = ble.duplex(characteristic);
-    var cmd = {};
-    cmd.echo = argv.echo;
-    from2.obj([nmgr.generateEchoBuffer(cmd)])
-    .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-    .pipe(nmgr.decode())
-    .pipe(to2.obj(function (data, enc, cb) {
-      console.log(data);
-      dup.end(); //since we blocked ending, manually end
-      cb(); //callback writable
-      }, process.exit)
-    );
-  }
-
-  if(argv.hasOwnProperty("upload")){
-    var dup = ble.duplex(characteristic);
-    var fileSize = fs.statSync(argv.upload).size;
+    var fileSize = fs.statSync(argv.image_upload).size;
 
     //has to be 32 or larger or imgmgr returns rc: 3
     //they set this to 64 for serial?! but were already fragmenting in serial, ive seen up to 424 on osx serial work here..
@@ -406,7 +434,7 @@ var goBle = function(err, characteristic){
 
     var gate = utility.gater();
 
-    fs.createReadStream(argv.upload)
+    fs.createReadStream(argv.image_upload)
       .pipe(block({ size: maxFrag, zeroPadding: false }))
       .pipe(gate) //gate one block and thus one command at a time
       .pipe(nmgr.imageUploadTransform(fileSize))

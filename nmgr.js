@@ -120,40 +120,6 @@ function generateLogShowBuffer(cmd)
 }
 
 
-function generateTestBuffer(cmd)
-{
-  var encoded = cbor.encode(cmd)
-
-  var nmr = {};
-  nmr.Data = encoded;
-  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
-  nmr.Flags = 0;
-  nmr.Len = encoded.length;
-  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
-  nmr.Seq = 0;
-  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
-
-  return _serialize(nmr);
-}
-
-
-function generateConfirmBuffer(hash)
-{
-  var encoded = cbor.encode(cmd)
-
-  var nmr = {};
-  nmr.Data = encoded;
-  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
-  nmr.Flags = 0;
-  nmr.Len = encoded.length;
-  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
-  nmr.Seq = 0;
-  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
-
-  return _serialize(nmr);
-}
-
-
 function generateResetBuffer()
 {
   var encoded = cbor.encode({})
@@ -166,21 +132,6 @@ function generateResetBuffer()
   nmr.Group = CONSTANTS.NMGR_GROUP_ID_DEFAULT;
   nmr.Seq = 0;
   nmr.Id = CONSTANTS.NMGR_ID_RESET;
-
-  return _serialize(nmr);
-}
-
-
-function generateListBuffer()
-{
-  var nmr = {};
-  nmr.Data = Buffer.alloc(0)
-  nmr.Op = CONSTANTS.NMGR_OP_READ;
-  nmr.Flags = 0;
-  nmr.Len = 0;
-  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
-  nmr.Seq = 0;
-  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
 
   return _serialize(nmr);
 }
@@ -199,6 +150,69 @@ function generateEchoBuffer(cmd){
   nmr.Group = CONSTANTS.NMGR_GROUP_ID_DEFAULT;
   nmr.Seq = 0;
   nmr.Id = CONSTANTS.NMGR_ID_CONS_ECHO_CTRL;
+
+  return _serialize(nmr);
+}
+
+
+function generateImageTestBuffer(cmd)
+{
+  var encoded = cbor.encode(cmd)
+
+  var nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
+
+  return _serialize(nmr);
+}
+
+
+function generateImageConfirmBuffer(hash)
+{
+  var encoded = cbor.encode(cmd)
+
+  var nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
+
+  return _serialize(nmr);
+}
+
+function generateImageListBuffer()
+{
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_STATE;
+
+  return _serialize(nmr);
+}
+
+
+//&{Op:0 Flags:0 Len:0 Group:1 Seq:0 Id:3 Data:[]}
+function generateImageCoreListBuffer(){
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_IMAGE;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.IMGMGR_NMGR_ID_CORELIST;
 
   return _serialize(nmr);
 }
@@ -333,4 +347,4 @@ function _deserialize(serializedBuffer){
   return nmr;
 }
 
-module.exports = {generateStatListBuffer, generateStatReadBuffer, generateLogClearBuffer, generateLogLevelListBuffer, generateLogListBuffer, generateLogModuleListBuffer, generateLogShowBuffer, generateEchoBuffer, imageUploadTransform, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
+module.exports = {generateStatListBuffer, generateStatReadBuffer, generateLogClearBuffer, generateLogLevelListBuffer, generateLogListBuffer, generateLogModuleListBuffer, generateLogShowBuffer, generateEchoBuffer, imageUploadTransform, generateImageTestBuffer, generateImageConfirmBuffer, generateImageListBuffer, generateImageCoreListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
