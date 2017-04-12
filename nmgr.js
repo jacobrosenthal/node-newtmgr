@@ -6,6 +6,88 @@ var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr')
 
 
+//&{Op:2 Flags:0 Len:1 Group:4 Seq:0 Id:1 Data:[160]}
+function generateLogClearBuffer()
+{
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_WRITE;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_LOGS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.LOGS_NMGR_OP_CLEAR;
+
+  return _serialize(nmr);
+}
+
+
+//&{Op:0 Flags:0 Len:1 Group:4 Seq:0 Id:4 Data:[160]}
+function generateLogLevelListBuffer()
+{
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_LOGS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.LOGS_NMGR_OP_LEVEL_LIST;
+
+  return _serialize(nmr);
+}
+
+
+//&{Op:0 Flags:0 Len:1 Group:4 Seq:0 Id:5 Data:[160]}
+function generateLogListBuffer()
+{
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_LOGS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.LOGS_NMGR_OP_LOGS_LIST;
+
+  return _serialize(nmr);
+}
+
+
+//&{Op:0 Flags:0 Len:1 Group:4 Seq:0 Id:3 Data:[160]} 
+function generateLogModuleListBuffer()
+{
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_LOGS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.LOGS_NMGR_OP_MODULE_LIST;
+
+  return _serialize(nmr);
+}
+
+
+// { index: 0, log_name: 'reboot_log', ts: 0 }
+function generateLogShowBuffer(cmd)
+{
+  var encoded = cbor.encode(cmd)
+
+  var nmr = {};
+  nmr.Data = encoded;
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_LOGS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.LOGS_NMGR_OP_READ;
+
+  return _serialize(nmr);
+}
+
+
 function generateTestBuffer(cmd)
 {
   var encoded = cbor.encode(cmd)
@@ -42,11 +124,13 @@ function generateConfirmBuffer(hash)
 
 function generateResetBuffer()
 {
+  var encoded = cbor.encode({})
+
   var nmr = {};
-  nmr.Data = Buffer.from("{}");
+  nmr.Data = encoded;
   nmr.Op = CONSTANTS.NMGR_OP_WRITE;
   nmr.Flags = 0;
-  nmr.Len = nmr.Data.length;
+  nmr.Len = encoded.length;
   nmr.Group = CONSTANTS.NMGR_GROUP_ID_DEFAULT;
   nmr.Seq = 0;
   nmr.Id = CONSTANTS.NMGR_ID_RESET;
@@ -217,4 +301,4 @@ function _deserialize(serializedBuffer){
   return nmr;
 }
 
-module.exports = {generateEchoBuffer, imageUploadTransform, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
+module.exports = {generateLogClearBuffer, generateLogLevelListBuffer, generateLogListBuffer, generateLogModuleListBuffer, generateLogShowBuffer, generateEchoBuffer, imageUploadTransform, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};

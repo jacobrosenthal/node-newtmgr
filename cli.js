@@ -10,28 +10,83 @@ var nmgr = require('./').nmgr;
 var utility = require('./').utility;
 
 
-if(argv.hasOwnProperty("serial")){
-  var SerialPort = require("serialport").SerialPort
-  var serial = require('./').serial;
-
-  var port = new SerialPort(argv.serial, { baudRate: 115200 }, function(){
-    goSerial(null, port);
-  });
-
-}else if(argv.hasOwnProperty("ble")){
-  var noble = require('noble');
-  var ble = require('./').ble;
-
-  var options = {
-    services: ['8d53dc1d1db74cd3868b8a527460aa84'],
-    characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
-    name: argv.ble
-  };
-  ble.connect(options, goBle);
-}
-
-
 var goSerial = function(err, port){
+
+ if(argv.hasOwnProperty("log_list")){
+    var dup = serial.duplex(port);
+    from2.obj([nmgr.generateLogListBuffer()])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+ if(argv.hasOwnProperty("log_module_list")){
+    var dup = serial.duplex(port);
+    from2.obj([nmgr.generateLogModuleListBuffer()])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("log_level_list")){
+    var dup = serial.duplex(port);
+    from2.obj([nmgr.generateLogLevelListBuffer()])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("log_clear")){
+    var dup = serial.duplex(port);
+    from2.obj([nmgr.generateLogClearBuffer()])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("log_show")){
+    var cmd = { index: 0, log_name: argv.logshow, ts: 0 };
+    var dup = serial.duplex(port);
+    from2.obj([nmgr.generateLogShowBuffer(cmd)])
+      .pipe(serial.encode())
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(serial.decode())
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
 
   if(argv.hasOwnProperty("reset")){
     var dup = serial.duplex(port);
@@ -83,6 +138,7 @@ var goSerial = function(err, port){
   }
 
   if(argv.hasOwnProperty("confirm")){
+    var dup = serial.duplex(port);
     var cmd = {};
     cmd.confirm = false;
     cmd.hash = Buffer.from(argv.hash);
@@ -100,6 +156,7 @@ var goSerial = function(err, port){
     }
 
   if(argv.hasOwnProperty("echo")){
+    var dup = serial.duplex(port);
     var cmd = {};
     cmd.echo = argv.echo;
     from2.obj([nmgr.generateEchoBuffer(cmd)])
@@ -152,6 +209,72 @@ var goSerial = function(err, port){
 }
 
 var goBle = function(err, characteristic){
+
+ if(argv.hasOwnProperty("log_list")){
+    var dup = ble.duplex(characteristic);
+    from2.obj([nmgr.generateLogListBuffer()])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+ if(argv.hasOwnProperty("log_module_list")){
+    var dup = ble.duplex(characteristic);
+    from2.obj([nmgr.generateLogModuleListBuffer()])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("log_level_list")){
+    var dup = ble.duplex(characteristic);
+    from2.obj([nmgr.generateLogLevelListBuffer()])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("log_clear")){
+    var dup = ble.duplex(characteristic);
+    from2.obj([nmgr.generateLogClearBuffer()])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
+
+  if(argv.hasOwnProperty("log_show")){
+    var cmd = { index: 0, log_name: argv.logshow, ts: 0 };
+    var dup = ble.duplex(characteristic);
+    from2.obj([nmgr.generateLogShowBuffer(cmd)])
+      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
+      .pipe(nmgr.decode())
+      .pipe(to2.obj(function (data, enc, cb) {
+        console.log(data);
+        dup.end(); //since we blocked ending, manually end
+        cb(); //callback writable
+        }, process.exit)
+      );
+  }
 
   if(argv.hasOwnProperty("reset")){
     var dup = ble.duplex(characteristic);
@@ -236,7 +359,6 @@ var goBle = function(err, characteristic){
     var maxFrag = 424;
 
     var gate = utility.gater();
-    var dup = serial.duplex(port);
 
     fs.createReadStream(argv.upload)
       .pipe(block({ size: maxFrag, zeroPadding: false }))
@@ -259,4 +381,24 @@ var goBle = function(err, characteristic){
         }, process.exit)
       );
   }
+}
+
+if(argv.hasOwnProperty("serial")){
+  var SerialPort = require("serialport").SerialPort
+  var serial = require('./').serial;
+
+  var port = new SerialPort(argv.serial, { baudRate: 115200 }, function(){
+    goSerial(null, port);
+  });
+
+}else if(argv.hasOwnProperty("ble")){
+  var noble = require('noble');
+  var ble = require('./').ble;
+
+  var options = {
+    services: ['8d53dc1d1db74cd3868b8a527460aa84'],
+    characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
+    name: argv.ble
+  };
+  ble.connect(options, goBle);
 }
