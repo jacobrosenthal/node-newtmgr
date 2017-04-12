@@ -6,6 +6,38 @@ var CONSTANTS = require('./constants');
 var debug = require('debug')('newtmgr')
 
 
+// &{Op:0 Flags:0 Len:1 Group:2 Seq:0 Id:1 Data:[160]}
+function generateStatListBuffer()
+{
+  var nmr = {};
+  nmr.Data = Buffer.alloc(0)
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = 0;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_STATS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.STATS_NMGR_OP_LIST;
+
+  return _serialize(nmr);
+}
+
+// { name: 'dog' }
+function generateStatReadBuffer(cmd)
+{
+  var encoded = cbor.encode(cmd)
+
+  var nmr = {};
+  nmr.Data = encoded
+  nmr.Op = CONSTANTS.NMGR_OP_READ;
+  nmr.Flags = 0;
+  nmr.Len = encoded.length;
+  nmr.Group = CONSTANTS.NMGR_GROUP_ID_STATS;
+  nmr.Seq = 0;
+  nmr.Id = CONSTANTS.STATS_NMGR_OP_READ;
+
+  return _serialize(nmr);
+}
+
 //&{Op:2 Flags:0 Len:1 Group:4 Seq:0 Id:1 Data:[160]}
 function generateLogClearBuffer()
 {
@@ -301,4 +333,4 @@ function _deserialize(serializedBuffer){
   return nmr;
 }
 
-module.exports = {generateLogClearBuffer, generateLogLevelListBuffer, generateLogListBuffer, generateLogModuleListBuffer, generateLogShowBuffer, generateEchoBuffer, imageUploadTransform, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
+module.exports = {generateStatListBuffer, generateStatReadBuffer, generateLogClearBuffer, generateLogLevelListBuffer, generateLogListBuffer, generateLogModuleListBuffer, generateLogShowBuffer, generateEchoBuffer, imageUploadTransform, generateTestBuffer, generateConfirmBuffer, generateListBuffer, generateResetBuffer, decode, _serialize, _deserialize, _accumulate, _decode};
