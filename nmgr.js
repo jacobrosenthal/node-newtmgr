@@ -172,7 +172,7 @@ function generateImageTestBuffer(cmd)
 }
 
 
-function generateImageConfirmBuffer(hash)
+function generateImageConfirmBuffer(cmd)
 {
   var encoded = cbor.encode(cmd)
 
