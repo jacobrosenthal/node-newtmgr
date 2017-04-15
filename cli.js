@@ -148,7 +148,7 @@ var goSerial = function(err, port){
     var dup = serial.duplex(port);
     var cmd = {};
     cmd.confirm = true;
-    cmd.hash = Buffer.from(argv.image_hash);
+    cmd.hash = Buffer.from(argv.image_confirm);
     from2.obj([nmgr.generateImageConfirmBuffer(cmd)])
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
@@ -197,7 +197,7 @@ var goSerial = function(err, port){
     var dup = serial.duplex(port);
     var cmd = {};
     cmd.confirm = false;
-    cmd.hash = Buffer.from(argv.image_hash);
+    cmd.hash = Buffer.from(argv.image_test);
     from2.obj([nmgr.generateImageTestBuffer(cmd)])
       .pipe(serial.encode())
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
@@ -369,7 +369,7 @@ var goBle = function(err, characteristic){
     var dup = ble.duplex(characteristic);
     var cmd = {};
     cmd.confirm = true;
-    cmd.hash = Buffer.from(argv.image_hash);
+    cmd.hash = Buffer.from(argv.image_confirm);
     from2.obj([nmgr.generateImageConfirmBuffer(cmd)])
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(nmgr.decode())
@@ -412,7 +412,7 @@ var goBle = function(err, characteristic){
     var dup = ble.duplex(characteristic);
     var cmd = {};
     cmd.confirm = false;
-    cmd.hash = Buffer.from(argv.image_hash);
+    cmd.hash = Buffer.from(argv.image_test);
     from2.obj([nmgr.generateImageTestBuffer(cmd)])
       .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
       .pipe(nmgr.decode())
