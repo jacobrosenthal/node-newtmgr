@@ -47,13 +47,13 @@ function gater(){
       return cb(null, data);
     }else{
 
-      var dogs = function(){
+      var next = function(){
         debug('gater next');
         cb(null, data);
       };
 
       debug("gater delay", data);
-      this.once('next', dogs.bind(this))
+      this.once('next', next.bind(this))
     }
   };
   return through2.obj(transform, function(cb){debug("gater flushing");cb()});
