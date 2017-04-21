@@ -214,8 +214,8 @@ var goSerial = function(err, port){
   if(argv.hasOwnProperty("image_upload")){
     var fileSize = fs.statSync(argv.image_upload).size;
 
-    //they set this to 64 for serial?! but were already fragmenting in serial, ive seen up to 424 on osx serial work here..
-    var maxFrag = 424;
+    //ive seen up to 424 on osx, newt tool uses 64
+    var maxFrag = 64;
 
     var gate = utility.gater();
     var dup = serial.duplex(port);
@@ -428,9 +428,8 @@ var goBle = function(err, characteristic){
     var dup = ble.duplex(characteristic);
     var fileSize = fs.statSync(argv.image_upload).size;
 
-    //has to be 32 or larger or imgmgr returns rc: 3
-    //they set this to 64 for serial?! but were already fragmenting in serial, ive seen up to 424 on osx serial work here..
-    var maxFrag = 424;
+    //has to be 32 or larger or imgmgr returns rc: 3, ive seen 450+ work, newt tool uses 87
+    var maxFrag = 87;
 
     var gate = utility.gater();
 
