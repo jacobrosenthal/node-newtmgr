@@ -132,7 +132,6 @@ if(argv.hasOwnProperty("serial")){
     go(null, port, serial);
   });
 
-
   port.once('error', exit);
   port.once('close', exit);
 

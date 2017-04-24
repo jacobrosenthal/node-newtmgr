@@ -22,7 +22,7 @@
     "serialport": "^3.1.2"
   },
   "dependencies": {
-    "borc": "^2.0.2",
+    "cbor-sync": "^1.0.2",
     "crc": "^3.4.4",
     "debug": "^2.6.3",
     "duplexify": "^3.5.0",

@@ -6,7 +6,7 @@ chai.use(sinonChai);
 
 var from2 = require('from2');
 var to2 = require('flush-write-stream');
-var cbor = require('borc');
+var cbor = require('cbor-sync');
 
 var nmgr = require('../').nmgr;
 
