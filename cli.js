@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 var argv = require('yargs').argv;
 var utility = require('./').utility;
+var util = require('util');
 
 var exit = function(err){
   console.log("disconnected", err);
@@ -50,7 +51,7 @@ var go = function(err, emitter, transport){
     console.log("sending log_show command");    
     if(typeof argv.stat === 'boolean'){
       transport.log.show(emitter, function(err, obj){
-        console.log(utility.prettyError(obj));
+        console.log(util.inspect(utility.prettyError(obj), {depth: null}));
         process.exit(obj.rc);
       });
     }else{
