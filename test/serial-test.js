@@ -7,13 +7,13 @@ chai.use(sinonChai);
 var from2 = require('from2');
 var to2 = require('flush-write-stream');
 
-var serial = require('../').serial;
+var protocol = require('../').transport.serial.protocol;
 
 var resetCommand = new Buffer([0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x05, 0x7b, 0x7d]);
 var resetEncoded = new Buffer([0x41, 0x41, 0x77, 0x43, 0x41, 0x41, 0x41, 0x43, 0x41, 0x41, 0x41, 0x41, 0x42, 0x58, 0x74, 0x39, 0x4c, 0x67, 0x41, 0x3d]);
 var resetWritten = new Buffer([0x06, 0x09, 0x41, 0x41, 0x77, 0x43, 0x41, 0x41, 0x41, 0x43, 0x41, 0x41, 0x41, 0x41, 0x42, 0x58, 0x74, 0x39, 0x4c, 0x67, 0x41, 0x3d, 0x0a]);
 
-var listWritten = new Buffer([0x06, 0x09, 0x41, 0x41, 0x6f, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x45, 0x41, 0x41, 0x44, 0x63, 0x77, 0x0a])
+var listWritten = new Buffer([0x06, 0x09, 0x41, 0x41, 0x6f, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x45, 0x41, 0x41, 0x44, 0x63, 0x77, 0x0a]);
 var listResponse1 = new Buffer([6, 9, 65, 80, 52, 66, 65, 65, 68, 48, 65, 65, 69, 65, 65, 76, 57, 109, 97, 87, 49, 104, 90, 50, 86, 122, 110, 55, 57, 107, 99, 50, 120, 118, 100, 65, 66, 110, 100, 109, 86, 121, 99, 50, 108, 118, 98, 109, 85, 119, 76, 106, 65, 117, 77, 71, 82, 111, 89, 88, 78, 111, 87, 67, 65, 69, 87, 110, 84, 118, 120, 57, 108, 82, 102, 102, 72, 119, 119, 86, 102, 122, 71, 65, 66, 67, 122, 53, 99, 98, 43, 51, 107, 119, 54, 51, 69, 82, 67, 72, 113, 67, 56, 72, 76, 78, 101, 109, 104, 105, 98, 50, 57, 48, 89, 87, 74, 115, 90, 102, 86, 110, 99, 71, 86, 117, 90, 71, 108, 117]);
 var listResponse2 = new Buffer([4, 20, 90, 47, 82, 112, 89, 50, 57, 117, 90, 109, 108, 121, 98, 87, 86, 107, 57, 87, 90, 104, 89, 51, 82, 112, 100, 109, 88, 49, 97, 88, 66, 108, 99, 109, 49, 104, 98, 109, 86, 117, 100, 80, 84, 47, 118, 50, 82, 122, 98, 71, 57, 48, 65, 87, 100, 50, 90, 88, 74, 122, 97, 87, 57, 117, 90, 84, 65, 117, 77, 67, 52, 119, 90, 71, 104, 104, 99, 50, 104, 89, 73, 69, 69, 88, 51, 51, 119, 100, 120, 65, 57, 85, 56, 43, 54, 47, 104, 82, 70, 122, 43, 82, 70, 66, 122, 109, 43, 83, 73, 80, 111, 101, 103, 43, 75, 84, 89, 106, 84, 84, 111, 70, 114, 75, 97, 71, 74, 118]);
 var listResponse3 = new Buffer([4, 20, 98, 51, 82, 104, 89, 109, 120, 108, 57, 71, 100, 119, 90, 87, 53, 107, 97, 87, 53, 110, 57, 71, 108, 106, 98, 50, 53, 109, 97, 88, 74, 116, 90, 87, 84, 48, 90, 109, 70, 106, 100, 71, 108, 50, 90, 102, 82, 112, 99, 71, 86, 121, 98, 87, 70, 117, 90, 87, 53, 48, 57, 80, 47, 47, 97, 51, 78, 119, 98, 71, 108, 48, 85, 51, 82, 104, 100, 72, 86, 122, 65, 118, 56, 66, 67, 119, 61, 61]);
@@ -34,7 +34,7 @@ describe('serial', function () {
     };
 
     from2([resetCommand])
-      .pipe(serial._encode())
+      .pipe(protocol._encode())
       .pipe(to2(complete));
   });
 
@@ -47,7 +47,7 @@ describe('serial', function () {
     };
 
     from2([resetEncoded])
-      .pipe(serial._fragmentPacket())
+      .pipe(protocol._fragmentPacket())
       .pipe(to2(complete));
   });
 
@@ -60,7 +60,7 @@ describe('serial', function () {
     };
 
     from2([resetCommand])
-      .pipe(serial.encode())
+      .pipe(protocol.encode())
       .pipe(to2(complete));
   });
 
@@ -73,7 +73,7 @@ describe('serial', function () {
     };
 
     from2([resetResponse])
-      .pipe(serial._accumulatePacket())
+      .pipe(protocol._accumulatePacket())
       .pipe(to2(complete));
   });
 
@@ -87,7 +87,7 @@ describe('serial', function () {
     };
 
     from2([listResponse1, listResponse2, listResponse3])
-      .pipe(serial._accumulatePacket())
+      .pipe(protocol._accumulatePacket())
       .pipe(to2(complete));
   });
 
@@ -100,7 +100,7 @@ describe('serial', function () {
     };
 
     from2([listResponseAccumulated])
-      .pipe(serial._decode())
+      .pipe(protocol._decode())
       .pipe(to2(complete));
   });
 
@@ -110,10 +110,10 @@ describe('serial', function () {
     var complete = function(data){
       expect(data).to.deep.equal(listResponseDecoded);
       done();
-    }
+    };
 
     from2([listResponse1, listResponse2, listResponse3])
-      .pipe(serial.decode())
+      .pipe(protocol.decode())
       .pipe(to2(complete));
   });
 

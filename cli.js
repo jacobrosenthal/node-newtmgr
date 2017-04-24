@@ -1,477 +1,153 @@
 #! /usr/bin/env node
-
 var argv = require('yargs').argv;
-var from2 = require('from2');
-var to2 = require('flush-write-stream');
-var fs = require('fs');
-var block = require('block-stream2');
-
-var nmgr = require('./').nmgr;
 var utility = require('./').utility;
 
+var exit = function(err){
+  console.log("disconnected", err);
+  process.exit(101);
+};
 
-var goSerial = function(err, port){
-
- if(argv.hasOwnProperty("stat")){
-
-  if(argv.stat.length>0){
-    var cmd = {name: argv.stat};
-    var cmdList = [nmgr.generateStatReadBuffer(cmd)];
-  }
-  else{
-    var cmdList = [nmgr.generateStatListBuffer()];
-  }
-
-  var dup = serial.duplex(port);
-  from2.obj(cmdList)
-    .pipe(serial.encode())
-    .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-    .pipe(serial.decode())
-    .pipe(nmgr.decode())
-    .pipe(to2.obj(function (data, enc, cb) {
-      console.log(data);
-      dup.end(); //since we blocked ending, manually end
-      cb(); //callback writable
-      }, process.exit)
-    );
-  }
-
- if(argv.hasOwnProperty("log_list")){
-  var dup = serial.duplex(port);
-    from2.obj([nmgr.generateLogListBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
- if(argv.hasOwnProperty("log_module_list")){
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateLogModuleListBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("log_level_list")){
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateLogLevelListBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("log_clear")){
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateLogClearBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("log_show")){
-    var cmd = { index: 0, log_name: argv.log_show, ts: 0 };
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateLogShowBuffer(cmd)])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("echo")){
-    var dup = serial.duplex(port);
-    var cmd = {};
-    cmd.echo = argv.echo;
-    from2.obj([nmgr.generateEchoBuffer(cmd)])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("reset")){
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateResetBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_confirm")){
-    var dup = serial.duplex(port);
-    var cmd = {};
-    cmd.confirm = true;
-    cmd.hash = Buffer.from(argv.image_confirm);
-    from2.obj([nmgr.generateImageConfirmBuffer(cmd)])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_list")){
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateImageListBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(utility.hashToStringTransform())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_corelist")){
-    var dup = serial.duplex(port);
-    from2.obj([nmgr.generateImageCoreListBuffer()])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_test")){
-    var dup = serial.duplex(port);
-    var cmd = {};
-    cmd.confirm = false;
-    cmd.hash = Buffer.from(argv.image_test);
-    from2.obj([nmgr.generateImageTestBuffer(cmd)])
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-    }
-
-  if(argv.hasOwnProperty("image_upload")){
-    var fileSize = fs.statSync(argv.image_upload).size;
-
-    //ive seen up to 424 on osx, newt tool uses 64
-    var maxFrag = 64;
-
-    var gate = utility.gater();
-    var dup = serial.duplex(port);
-
-    fs.createReadStream(argv.image_upload)
-      .pipe(block({ size: maxFrag, zeroPadding: false }))
-      .pipe(gate) //gate one block and thus one command at a time
-      .pipe(nmgr.imageUploadTransform(fileSize))
-      .pipe(serial.encode())
-      .pipe(dup, {end: false}) //dont let fs end our stream before we get response, this is why pull streams are better
-      .pipe(serial.decode())
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        gate.emit('next'); //response received emit next block upstream
-        console.log(data);
-        if(data.rc!=0){
-          this.end(); //find proper early exit cleanup that doesnt leak
-          return cb();
-        }
-        if(data.off === fileSize) //if this is last chunk flush fs
-        {
-          dup.end(); //since we blocked ending, manually end
-        }
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-
-}
-
-var goBle = function(err, characteristic){
+var go = function(err, emitter, transport){
 
   if(argv.hasOwnProperty("stat")){
-
-    if(argv.stat.length>0){
-      var cmd = {name: argv.stat};
-      var cmdList = [nmgr.generateStatReadBuffer(cmd)];
+    console.log("sending stat command");
+    if(typeof argv.stat === 'boolean'){
+      transport.stat(emitter, function(err, obj){
+        console.log(utility.prettyError(obj));
+        process.exit(obj.rc);
+      });
+    }else{
+      transport.stat(emitter, argv.stat, function(err, obj){
+        console.log(utility.prettyError(obj));
+        process.exit(obj.rc);
+      });
     }
-    else{
-      var cmdList = [nmgr.generateStatListBuffer()];
+  }else if(argv.hasOwnProperty("log_list")){
+    console.log("sending log_list command");
+    transport.log.list(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("log_module_list")){
+    console.log("sending log_module_list command");
+    transport.log.moduleList(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("log_level_list")){
+    console.log("sending log_level_list command");    
+    transport.log.levelList(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("log_clear")){
+    console.log("sending log_clear command");    
+    transport.log.clear(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("log_show")){
+    console.log("sending log_show command");    
+    if(typeof argv.stat === 'boolean'){
+      transport.log.show(emitter, function(err, obj){
+        console.log(utility.prettyError(obj));
+        process.exit(obj.rc);
+      });
+    }else{
+      transport.log.show(emitter, argv.log_show, function(err, obj){
+        console.log(utility.prettyError(obj));
+        process.exit(obj.rc);
+      });
     }
 
-    var dup = ble.duplex(characteristic);
-    from2.obj(cmdList)
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
+  }else if(argv.hasOwnProperty("echo")){
+    console.log("sending echo command");    
+    transport.echo(emitter, argv.echo, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("reset")){
+    console.log("sending reset command");    
+    transport.reset(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("image_confirm")){
+    console.log("sending image_confirm command");    
+    var confirmHashBuffer = Buffer.from(argv.image_confirm, "hex");
+    transport.image.confirm(emitter, confirmHashBuffer, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("image_list")){
+    console.log("sending image_list command");    
+    transport.image.list(emitter, function(err, obj){
+      console.log(utility.prettyList(obj)); //turn hash buffers into string
+      process.exit(0); //image_list doesnt have an rc??
+    });
+  }else if(argv.hasOwnProperty("image_corelist")){
+    console.log("sending image_corelist command");    
+    transport.image.corelist(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }else if(argv.hasOwnProperty("image_test")){
+    console.log("sending image_test command");    
+    var testHashBuffer = Buffer.from(argv.image_test, "hex");
+    transport.image.test(emitter, testHashBuffer, function(err, obj){
+      if(err){
+        console.log(utility.prettyError(obj));
+        return process.exit(obj.rc);
+      }
+
+      //successful image_list doesnt have an rc??
+      console.log(utility.prettyList(obj));
+      process.exit(0) 
+    });
+  }else if(argv.hasOwnProperty("image_upload")){
+    var fs = require('fs');
+    var fileBuffer = fs.readFileSync(argv.image_upload);
+    console.log("sending image_upload command", fileBuffer.length, "bytes");    
+
+    var status = transport.image.upload(emitter, fileBuffer, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+    status.on('status', function(obj){
+      console.log(utility.prettyError(obj));
+    });
+  }else{
+    console.log("command not found");
+    process.exit(100);
   }
-
- if(argv.hasOwnProperty("log_list")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateLogListBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
- if(argv.hasOwnProperty("log_module_list")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateLogModuleListBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("log_level_list")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateLogLevelListBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("log_clear")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateLogClearBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("log_show")){
-    var cmd = { index: 0, log_name: argv.log_show, ts: 0 };
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateLogShowBuffer(cmd)])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("echo")){
-    var dup = ble.duplex(characteristic);
-    var cmd = {};
-    cmd.echo = argv.echo;
-    from2.obj([nmgr.generateEchoBuffer(cmd)])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("reset")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateResetBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_confirm")){
-    var dup = ble.duplex(characteristic);
-    var cmd = {};
-    cmd.confirm = true;
-    cmd.hash = Buffer.from(argv.image_confirm);
-    from2.obj([nmgr.generateImageConfirmBuffer(cmd)])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_list")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateImageListBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(utility.hashToStringTransform())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_corelist")){
-    var dup = ble.duplex(characteristic);
-    from2.obj([nmgr.generateImageCoreListBuffer()])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_test")){
-    var dup = ble.duplex(characteristic);
-    var cmd = {};
-    cmd.confirm = false;
-    cmd.hash = Buffer.from(argv.image_test);
-    from2.obj([nmgr.generateImageTestBuffer(cmd)])
-      .pipe(dup, {end: false}) //dont let from end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        console.log(data);
-        dup.end(); //since we blocked ending, manually end
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-
-  if(argv.hasOwnProperty("image_upload")){
-    var dup = ble.duplex(characteristic);
-    var fileSize = fs.statSync(argv.image_upload).size;
-
-    //has to be 32 or larger or imgmgr returns rc: 3, ive seen 450+ work, newt tool uses 87
-    var maxFrag = 87;
-
-    var gate = utility.gater();
-
-    fs.createReadStream(argv.image_upload)
-      .pipe(block({ size: maxFrag, zeroPadding: false }))
-      .pipe(gate) //gate one block and thus one command at a time
-      .pipe(nmgr.imageUploadTransform(fileSize))
-      .pipe(dup, {end: false}) //dont let fs end our stream before we get response, this is why pull streams are better
-      .pipe(nmgr.decode())
-      .pipe(to2.obj(function (data, enc, cb) {
-        gate.emit('next'); //response received emit next block upstream
-        console.log(data);
-        if(data.rc!=0){
-          this.end(); //find proper early exit cleanup that doesnt leak
-          return cb();
-        }
-        if(data.off === fileSize) //if this is last chunk flush fs
-        {
-          dup.end(); //since we blocked ending, manually end
-        }
-        cb(); //callback writable
-        }, process.exit)
-      );
-  }
-}
+};
 
 if(argv.hasOwnProperty("serial")){
-  var SerialPort = require("serialport").SerialPort
-  var serial = require('./').serial;
+  var SerialPort = require("serialport").SerialPort;
+  var serial = require('./').transport.serial;
 
+  console.log("opening serial port");
   var port = new SerialPort(argv.serial, { baudRate: 115200 }, function(){
-    goSerial(null, port);
+    console.log("found port");
+    go(null, port, serial);
   });
 
-}else if(argv.hasOwnProperty("ble")){
-  var noble = require('noble');
-  var ble = require('./').ble;
 
+  port.once('error', exit);
+  port.once('close', exit);
+
+}else if(argv.hasOwnProperty("ble")){
+  var ble = require('./').transport.ble;
+
+  console.log("scanning for ble device", argv.ble);
   var options = {
     services: ['8d53dc1d1db74cd3868b8a527460aa84'],
     characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
     name: argv.ble
   };
-  ble.connect(options, goBle);
+  ble.connect(options, function(err, peripheral, characteristic){
+    console.log("found characteristic");
+    peripheral.once('disconnect', exit);
+    go(null, characteristic, ble);
+  });
 }

@@ -18,7 +18,7 @@
     "sinon-chai": "^2.9.0"
   },
   "optionalDependencies": {
-    "noble": "^1.8.0",
+    "noble": "jacobrosenthal/noble#newtmgr",
     "serialport": "^3.1.2"
   },
   "dependencies": {
@@ -31,6 +31,7 @@
     "from2": "^2.3.0",
     "lodash.has": "^4.5.2",
     "lodash.hasin": "^4.5.2",
+    "lodash.invert": "^4.3.0",
     "pull-pushable": "^2.0.1",
     "pull-stream": "^3.5.0",
     "pull-through": "^1.0.18",

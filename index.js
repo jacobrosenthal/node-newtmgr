@@ -1,7 +1,10 @@
-var serial = require('./serial');
-var ble = require('./ble');
-var nmgr = require('./nmgr');
-var utility = require('./utility');
-var Sourcer = require('./sourcer');
+var nmgr = require('./lib/nmgr');
+var transport = require('./lib/transport');
+var utility = require('./lib/utility');
 
-module.exports = {serial, ble, nmgr, utility, Sourcer};
+
+module.exports = {
+  transport: transport,
+  nmgr: nmgr,
+  utility: utility
+};
