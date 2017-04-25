@@ -52,12 +52,12 @@ var go = function(err, emitter, transport){
     console.log("sending log_show command");    
     if(typeof argv.stat === 'boolean'){
       transport.log.show(emitter, function(err, obj){
-        console.log(utility.prettyError(obj));
+        console.log(JSON.stringify(utility.prettyError(obj), null, '\t'));
         process.exit(obj.rc);
       });
     }else{
       transport.log.show(emitter, argv.log_show, function(err, obj){
-        console.log(utility.prettyError(obj));
+        console.log(JSON.stringify(utility.prettyError(obj), null, '\t'));
         process.exit(obj.rc);
       });
     }
