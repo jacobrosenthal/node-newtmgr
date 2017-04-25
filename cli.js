@@ -2,6 +2,7 @@
 var argv = require('yargs').argv;
 var utility = require('./').utility;
 var util = require('util');
+var noble = require('noble');
 
 var exit = function(err){
   console.log("disconnected", err);
@@ -51,7 +52,7 @@ var go = function(err, emitter, transport){
     console.log("sending log_show command");    
     if(typeof argv.stat === 'boolean'){
       transport.log.show(emitter, function(err, obj){
-        console.log(util.inspect(utility.prettyError(obj), {depth: null}));
+        console.log(utility.prettyError(obj));
         process.exit(obj.rc);
       });
     }else{
@@ -139,15 +140,21 @@ if(argv.hasOwnProperty("serial")){
 }else if(argv.hasOwnProperty("ble")){
   var ble = require('./').transport.ble;
 
-  console.log("scanning for ble device", argv.ble);
   var options = {
     services: ['8d53dc1d1db74cd3868b8a527460aa84'],
     characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
     name: argv.ble
   };
-  ble.connect(options, function(err, peripheral, characteristic){
-    console.log("found characteristic");
-    peripheral.once('disconnect', exit);
-    go(null, characteristic, ble);
-  });
+
+  var onStateChange = function (state) {
+    if (state === 'poweredOn') {
+      console.log("scanning for ble device", argv.ble);
+      ble.scanAndConnect(noble, options, function(err, peripheral, characteristic){
+        console.log("found characteristic");
+        peripheral.once('disconnect', exit);
+        go(null, characteristic, ble);
+      });
+    }
+  };
+  noble.once('stateChange', onStateChange);
 }
