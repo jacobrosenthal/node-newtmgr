@@ -104,7 +104,7 @@ var go = function(err, emitter, transport){
 
       //successful image_list doesnt have an rc??
       console.log(utility.prettyList(obj));
-      process.exit(0) 
+      process.exit(0);
     });
   }else if(argv.hasOwnProperty("image_upload")){
     var fs = require('fs');
