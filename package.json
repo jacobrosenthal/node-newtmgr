@@ -18,7 +18,7 @@
     "sinon-chai": "^2.9.0"
   },
   "optionalDependencies": {
-    "noble": "jacobrosenthal/noble#newtmgr",
+    "noble": "sandeepmistry/noble#streams",
     "serialport": "^3.1.2"
   },
   "dependencies": {
