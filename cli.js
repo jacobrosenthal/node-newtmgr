@@ -96,6 +96,7 @@ var go = function(err, emitter, transport){
   }else if(argv.hasOwnProperty("image_test")){
     console.log("sending image_test command");    
     var testHashBuffer = Buffer.from(argv.image_test, "hex");
+    console.log(testHashBuffer);
     transport.image.test(emitter, testHashBuffer, function(err, obj){
       if(err){
         console.log(utility.prettyError(obj));
@@ -157,4 +158,7 @@ if(argv.hasOwnProperty("serial")){
     }
   };
   noble.once('stateChange', onStateChange);
+}else{
+  console.log("no transport selected, try --ble=name or --serial=/dev/tty/usbxxxx")
+  process.exit(1);
 }
