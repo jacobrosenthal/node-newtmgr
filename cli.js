@@ -24,6 +24,19 @@ var go = function(err, emitter, transport){
         process.exit(obj.rc);
       });
     }
+  }else if(argv.hasOwnProperty("taskstats")){
+    console.log("sending taskstats command");
+    transport.taskstats(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
+  }
+  else if(argv.hasOwnProperty("mpstats")){
+    console.log("sending mpstats command");
+    transport.mpstats(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
   }else if(argv.hasOwnProperty("log_list")){
     console.log("sending log_list command");
     transport.log.list(emitter, function(err, obj){
