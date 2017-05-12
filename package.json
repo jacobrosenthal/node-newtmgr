@@ -1,6 +1,6 @@
 {
   "name": "newtmgr",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "unofficial Apache MyNewt Manager",
   "main": "index.js",
   "scripts": {
