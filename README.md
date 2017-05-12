@@ -4,6 +4,8 @@ Work in progress. Current transports include serial and ble. Current commands in
 * echo
 * reset
 * stat
+* taskstats
+* mpstats
 * log_list
 * log_module_list
 * log_level_list
@@ -36,6 +38,16 @@ nnewtmgr --reset --serial=/dev/tty.usbmodem1411
 stat list (no argument for list, or specify one to read)
 ```
 nnewtmgr --stat=ble_phy --serial=/dev/tty.usbmodem1411
+```
+
+taskstats
+```
+nnewtmgr --taskstats --serial=/dev/tty.usbmodem1411
+```
+
+mpstats
+```
+nnewtmgr --mpstats --serial=/dev/tty.usbmodem1411
 ```
 
 log_list
