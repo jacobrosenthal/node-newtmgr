@@ -87,6 +87,12 @@ var go = function(err, emitter, transport){
       console.log(utility.prettyError(obj));
       process.exit(obj.rc);
     });
+  }else if(argv.hasOwnProperty("image_erase")){
+    console.log("sending erase command");
+    transport.image.erase(emitter, function(err, obj){
+      console.log(utility.prettyError(obj));
+      process.exit(obj.rc);
+    });
   }else if(argv.hasOwnProperty("image_confirm")){
     console.log("sending image_confirm command");    
     var confirmHashBuffer = Buffer.from(argv.image_confirm, "hex");
