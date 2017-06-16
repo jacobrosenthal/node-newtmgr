@@ -1,12 +1,19 @@
 #! /usr/bin/env node
 var argv = require('yargs').argv;
 var utility = require('./').utility;
-var util = require('util');
-var noble = require('noble');
 
-var exit = function(err){
-  console.log("disconnected", err);
-  process.exit(101);
+var exit = function(err, obj){
+  if(err){
+    console.log(err.toString());
+  }
+
+  if (obj){
+    utility.prettyList(obj);
+    utility.prettyError(obj);
+    console.log(JSON.stringify(obj, null, '\t'));
+  }
+
+  process.exit(1);
 };
 
 var go = function(err, emitter, transport){
@@ -14,133 +21,73 @@ var go = function(err, emitter, transport){
   if(argv.hasOwnProperty("stat")){
     console.log("sending stat command");
     if(typeof argv.stat === 'boolean'){
-      transport.stat(emitter, function(err, obj){
-        console.log(utility.prettyError(obj));
-        process.exit(obj.rc);
-      });
+      transport.stat(emitter, 5000, exit);
     }else{
-      transport.stat(emitter, argv.stat, function(err, obj){
-        console.log(utility.prettyError(obj));
-        process.exit(obj.rc);
-      });
+      transport.stat(emitter, argv.stat, 5000, exit);
     }
   }else if(argv.hasOwnProperty("taskstats")){
     console.log("sending taskstats command");
-    transport.taskstats(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.taskstats(emitter, 5000, exit);
   }
   else if(argv.hasOwnProperty("mpstats")){
     console.log("sending mpstats command");
-    transport.mpstats(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.mpstats(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_list")){
     console.log("sending log_list command");
-    transport.log.list(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.log.list(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_module_list")){
     console.log("sending log_module_list command");
-    transport.log.moduleList(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.log.moduleList(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_level_list")){
     console.log("sending log_level_list command");    
-    transport.log.levelList(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.log.levelList(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_clear")){
     console.log("sending log_clear command");    
-    transport.log.clear(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.log.clear(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_show")){
     console.log("sending log_show command");    
     if(typeof argv.stat === 'boolean'){
-      transport.log.show(emitter, function(err, obj){
-        console.log(JSON.stringify(utility.prettyError(obj), null, '\t'));
-        process.exit(obj.rc);
-      });
+      transport.log.show(emitter, 5000, exit);
     }else{
-      transport.log.show(emitter, argv.log_show, function(err, obj){
-        console.log(JSON.stringify(utility.prettyError(obj), null, '\t'));
-        process.exit(obj.rc);
-      });
+      transport.log.show(emitter, argv.log_show, 5000, exit);
     }
 
   }else if(argv.hasOwnProperty("echo")){
     console.log("sending echo command");    
-    transport.echo(emitter, argv.echo, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.echo(emitter, argv.echo, 5000, exit);
   }else if(argv.hasOwnProperty("reset")){
     console.log("sending reset command");    
-    transport.reset(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.reset(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_erase")){
     console.log("sending erase command");
-    transport.image.erase(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.image.erase(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_confirm")){
     console.log("sending image_confirm command");    
     var confirmHashBuffer = Buffer.from(argv.image_confirm, "hex");
-    transport.image.confirm(emitter, confirmHashBuffer, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.image.confirm(emitter, confirmHashBuffer, 5000, exit);
   }else if(argv.hasOwnProperty("image_list")){
     console.log("sending image_list command");    
-    transport.image.list(emitter, function(err, obj){
-      console.log(utility.prettyList(obj)); //turn hash buffers into string
-      process.exit(0); //image_list doesnt have an rc??
-    });
+    transport.image.list(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_corelist")){
     console.log("sending image_corelist command");    
-    transport.image.corelist(emitter, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    transport.image.corelist(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_test")){
     console.log("sending image_test command");    
     var testHashBuffer = Buffer.from(argv.image_test, "hex");
     console.log(testHashBuffer);
-    transport.image.test(emitter, testHashBuffer, function(err, obj){
-      if(err){
-        console.log(utility.prettyError(obj));
-        return process.exit(obj.rc);
-      }
-
-      //successful image_list doesnt have an rc??
-      console.log(utility.prettyList(obj));
-      process.exit(0);
-    });
+    transport.image.test(emitter, testHashBuffer, 5000, exit);
   }else if(argv.hasOwnProperty("image_upload")){
     var fs = require('fs');
     var fileBuffer = fs.readFileSync(argv.image_upload);
     console.log("sending image_upload command", fileBuffer.length, "bytes");    
 
-    var status = transport.image.upload(emitter, fileBuffer, function(err, obj){
-      console.log(utility.prettyError(obj));
-      process.exit(obj.rc);
-    });
+    var status = transport.image.upload(emitter, fileBuffer, 30000, exit);
+    //todo, note were not removing this listener, but were likely exiting so probably fine
     status.on('status', function(obj){
       console.log(utility.prettyError(obj));
     });
   }else{
-    console.log("command not found");
-    process.exit(100);
+    exit(new Error("command not found"));
   }
 };
 
@@ -158,6 +105,7 @@ if(argv.hasOwnProperty("serial")){
   port.once('close', exit);
 
 }else if(argv.hasOwnProperty("ble")){
+  var noble = require('noble');
   var ble = require('./').transport.ble;
 
   var options = {
@@ -178,6 +126,5 @@ if(argv.hasOwnProperty("serial")){
   };
   noble.once('stateChange', onStateChange);
 }else{
-  console.log("no transport selected, try --ble=name or --serial=/dev/tty/usbxxxx")
-  process.exit(1);
+  exit(new Error("no transport selected, try --ble=name or --serial=/dev/tty/usbxxxx"));
 }
