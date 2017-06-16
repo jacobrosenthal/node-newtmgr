@@ -16,6 +16,7 @@ Work in progress. Current transports include serial and ble. Current commands in
 * image_corelist
 * image_test
 * image_upload
+* image_erase
 
 ## Install
 Install globally with:
@@ -98,6 +99,11 @@ nnewtmgr --image_test=13c1383f1f020d496b29e2660319c6ca0fd97b5a6e24342fb69b5fb591
 image_upload (pass the file to upload)
 ```
 nnewtmgr --image_upload=blesplit.img --serial=/dev/tty.usbmodem1411
+```
+
+image_erase
+```
+nnewtmgr --image_erase --serial=/dev/tty.usbmodem1411
 ```
 
 # Troubleshooting
