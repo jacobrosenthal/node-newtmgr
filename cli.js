@@ -83,12 +83,14 @@ var go = function(err, emitter, transport){
     var fs = require('fs');
     var fileBuffer = fs.readFileSync(argv.image_upload);
     console.log("sending image_upload command", fileBuffer.length, "bytes");    
-
-    var status = transport.image.upload(emitter, fileBuffer, 30000, exit);
-    //todo, note were not removing this listener, but were likely exiting so probably fine
-    status.on('status', function(obj){
+    var printStatus = function(obj){
       console.log(utility.prettyError(obj));
+    }
+    var status;
+    status = transport.image.upload(emitter, fileBuffer, 30000, function(){
+      status.removeListener('status', printStatus);
     });
+    status.on('status', printStatus);
   }else{
     exit(new Error("command not found"));
   }
