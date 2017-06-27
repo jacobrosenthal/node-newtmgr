@@ -39,13 +39,13 @@ var go = function(err, emitter, transport){
     console.log("sending log_module_list command");
     transport.log.moduleList(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_level_list")){
-    console.log("sending log_level_list command");    
+    console.log("sending log_level_list command");
     transport.log.levelList(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_clear")){
-    console.log("sending log_clear command");    
+    console.log("sending log_clear command");
     transport.log.clear(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("log_show")){
-    console.log("sending log_show command");    
+    console.log("sending log_show command");
     if(typeof argv.stat === 'boolean'){
       transport.log.show(emitter, 5000, exit);
     }else{
@@ -53,10 +53,10 @@ var go = function(err, emitter, transport){
     }
 
   }else if(argv.hasOwnProperty("echo")){
-    console.log("sending echo command");    
+    console.log("sending echo command");
     transport.echo(emitter, argv.echo, 5000, exit);
   }else if(argv.hasOwnProperty("reset")){
-    console.log("sending reset command");    
+    console.log("sending reset command");
     transport.reset(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_erase")){
     console.log("sending erase command");
@@ -69,20 +69,20 @@ var go = function(err, emitter, transport){
     }
     transport.image.confirm(emitter, confirmHashBuffer, 5000, exit);
   }else if(argv.hasOwnProperty("image_list")){
-    console.log("sending image_list command");    
+    console.log("sending image_list command");
     transport.image.list(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_corelist")){
-    console.log("sending image_corelist command");    
+    console.log("sending image_corelist command");
     transport.image.corelist(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_test")){
-    console.log("sending image_test command");    
+    console.log("sending image_test command");
     var testHashBuffer = Buffer.from(argv.image_test, "hex");
     console.log(testHashBuffer);
     transport.image.test(emitter, testHashBuffer, 5000, exit);
   }else if(argv.hasOwnProperty("image_upload")){
     var fs = require('fs');
     var fileBuffer = fs.readFileSync(argv.image_upload);
-    console.log("sending image_upload command", fileBuffer.length, "bytes");    
+    console.log("sending image_upload command", fileBuffer.length, "bytes");
     var printStatus = function(obj){
       console.log(utility.prettyError(obj));
     }
