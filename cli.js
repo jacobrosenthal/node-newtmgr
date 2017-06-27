@@ -62,8 +62,11 @@ var go = function(err, emitter, transport){
     console.log("sending erase command");
     transport.image.erase(emitter, 5000, exit);
   }else if(argv.hasOwnProperty("image_confirm")){
-    console.log("sending image_confirm command");    
-    var confirmHashBuffer = Buffer.from(argv.image_confirm, "hex");
+    console.log("sending image_confirm command");
+    var confirmHashBuffer = null;
+    if(typeof argv.image_confirm !== 'boolean'){
+      confirmHashBuffer = Buffer.from(argv.image_confirm, "hex");
+    }
     transport.image.confirm(emitter, confirmHashBuffer, 5000, exit);
   }else if(argv.hasOwnProperty("image_list")){
     console.log("sending image_list command");    
