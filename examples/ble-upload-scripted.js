@@ -1,5 +1,5 @@
 // implements https://mynewt.apache.org/v1_0_0/os/modules/split/split/#split-apps
-// node examples/ble-upload-scripted.js --app_name=nimble-blesplit --bootloader_name=nimble-bleprph --file_name=../newt/bin/targets/split-microbit/app/apps/blesplit/blesplit.img
+// node examples/ble-upload-scripted.js --name=nimble-blesplit --name=nimble-bleprph --file_name=../newt/bin/targets/split-microbit/app/apps/blesplit/blesplit.img
 var argv = require('yargs').argv;
 var utility = require('../').utility;
 var async = require("async");
@@ -11,6 +11,7 @@ var clone = require('clone');
 var options = {
   services: ['8d53dc1d1db74cd3868b8a527460aa84'],
   characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
+  names: argv.name
 };
 
 var char;
@@ -44,8 +45,7 @@ async.series([
   },
 
   function(callback) {
-    console.log("scanning for ble device ", argv.app_name);
-    options.name = argv.app_name;
+    console.log("scanning for ble device ", argv.name);
     transport.scanAndConnect(noble, options, function(err, peripheral, characteristic){
       periph = peripheral;
       char = characteristic;
@@ -59,12 +59,12 @@ async.series([
     transport.image.list(char, 5000, function(err, obj){
       print(err, obj);
       var app = utility.findApp(obj);
-      if(app.active){
+      if(app && app.active){
         var bootable = utility.findBootable(obj);
         console.log("get out of app");
         transport.image.test(char, bootable.hash, 5000, function(err, obj){
           print(err, obj);
-          callback();
+          callback(err, obj);
         });
       }else{
         callback();
@@ -75,7 +75,7 @@ async.series([
   function(callback){
     transport.image.list(char, 5000, function(err, obj){
       print(err, obj);
-      callback();
+      callback(err, obj);
     });
   },
 
@@ -87,7 +87,6 @@ async.series([
 
   function(callback){
     console.log("reconnecting after bootloader reset");
-    options.name = argv.bootloader_name;
     transport.scanAndConnect(noble, options, function(err, peripheral, characteristic){
       periph = peripheral;
       char = characteristic;
@@ -102,7 +101,7 @@ async.series([
       print(err, obj);
       transport.image.confirm(char, null, 5000, function(err, obj){
         print(err, obj);
-        callback();
+        callback(err, obj);
       });
     });
   },
@@ -115,7 +114,6 @@ async.series([
 
   function(callback){
     console.log("reconnecting after erase");
-    options.name = argv.bootloader_name;
     transport.scanAndConnect(noble, options, function(err, peripheral, characteristic){
       periph = peripheral;
       char = characteristic;
@@ -131,7 +129,7 @@ async.series([
     }
     var status;
     status = transport.image.upload(char, fileBuffer, 30000, function(){
-    status.removeListener('status', printStatus);
+      status.removeListener('status', printStatus);
       callback();
     });
     status.on('status', printStatus);
@@ -140,10 +138,13 @@ async.series([
   function(callback){
     console.log("testing new app", fileBuffer.length, "bytes");
     transport.image.list(char, 5000, function(err, obj){
+      if (obj.splitStatus !== 2){
+        callback(new Error("splitStatus: non-matching "));
+      }
       var app = utility.findApp(obj);
       transport.image.test(char, app.hash, 5000, function(err, obj){
         print(err, obj);
-        callback();
+        callback(err, obj);
       });
     });
   },
@@ -156,12 +157,11 @@ async.series([
 
   function(callback){
     console.log("reconnecting after reset");
-    options.name = argv.app_name;
     transport.scanAndConnect(noble, options, function(err, peripheral, characteristic){
       periph = peripheral;
       char = characteristic;
-      console.log("reconnected and found characteristic");
-      callback();
+        console.log("reconnected and found characteristic");
+        callback();
     });
   },
 
@@ -171,10 +171,12 @@ async.series([
       var app = utility.findApp(obj);
       transport.image.confirm(char, app.hash, 5000, function(err, obj){
         print(err, obj);
-        callback();
+        callback(err, obj);
       });
     });
   },
 
   process.exit
-]);
+], function(err) {
+  console.log(err.message)
+});
