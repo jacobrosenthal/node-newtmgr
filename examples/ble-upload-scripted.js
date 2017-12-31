@@ -96,17 +96,6 @@ async.series([
   },
 
   function(callback) {
-    console.log("confirm bootloader");
-    transport.image.list(char, 5000, function(err, obj){
-      print(err, obj);
-      transport.image.confirm(char, null, 5000, function(err, obj){
-        print(err, obj);
-        callback(err, obj);
-      });
-    });
-  },
-
-  function(callback) {
     console.log("erasing app");
     periph.once('disconnect', callback);
     transport.image.erase(char, 5000, function(){});
