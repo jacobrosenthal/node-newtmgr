@@ -97,8 +97,17 @@ async.series([
 
   function(callback) {
     console.log("erasing app");
+    // workaround nrf51 devices that lose ble when they erase
     periph.once('disconnect', callback);
-    transport.image.erase(char, 5000, function(){});
+    transport.image.erase(char, 5000, function(err, obj){
+        print(err, obj);
+        if(err){
+          process.exit()
+        }
+        // remove listener and move on otherwise
+        periph.removeListener('disconnect', callback)
+        callback()
+    });
   },
 
   function(callback){
