@@ -10,6 +10,7 @@ var clone = require('clone');
 var cmp = require('semver-compare-multi').cmp
 
 var options = {
+  timeoutSeconds: 30,
   services: ['8d53dc1d1db74cd3868b8a527460aa84'],
   characteristics: ['da2e7828fbce4e01ae9e261174997c48'],
   names: argv.name
@@ -77,6 +78,7 @@ var print = function(err, obj){
 var connect = function(callback){
   console.log("connecting");
   transport.scanAndConnect(noble, options, function(err, peripheral, characteristic){
+    if(err){ return callback(err);}
     periph = peripheral;
     char = characteristic;
     console.log("connected and found characteristic");
@@ -96,7 +98,10 @@ var reset = function(callback) {
 
 var confirm = function(callback){
   console.log("confirming");
-  transport.image.confirm(char, null, 5000, callback);
+  transport.image.confirm(char, null, 5000, function(err, obj){
+    print(err, obj);
+    return callback(err, obj);
+  });
 }
 
 // workaround nrf51 devices that lose ble when they erase, so manually erase before upload
@@ -122,11 +127,11 @@ var eraseAndStayConnected = function(callback) {
   });
 }
 
-var moveTo = function(hash, callback){
-  console.log("move to hash: ", hash.toString('hex'));
+var moveTo = function(hashBuffer, callback){
+  console.log("move to hash: ", hashBuffer.toString('hex'));
   async.series([
 
-    transport.image.test.bind(this, char, hash, 5000),
+    transport.image.test.bind(this, char, hashBuffer, 5000),
     reset,
     connect,
 
@@ -139,7 +144,7 @@ var moveTo = function(hash, callback){
           return image.active
         })
 
-        if(activeImage && activeImage.hash.toString('hex') === hash.toString('hex')){
+        if(activeImage && activeImage.hash.toString('hex') === hashBuffer.toString('hex')){
           return callback2();
         }else{
           return callback2(new Error("Couldn't boot hash"))
@@ -173,18 +178,27 @@ var moveToNewApp = function(callback){
   });
 }
 
-var upload = function(fileBuffer, callback){
+var upload = function(fileBuffer, retries, callback){
+  var printStatus;
+  var status;
 
   var disconnected = function(){
-    return callback(new Error("disconnected while writing bytes"))
+    if(status){
+      status.removeListener('status', printStatus);
+    }
+    if(retries--){
+      console.log("disconnected, but trying again");
+      return async.series([ connect, upload.bind(this, fileBuffer, retries--)], callback);
+    }else{
+      return callback(new Error("disconnected while writing bytes"))
+    }
   }
   periph.once('disconnect', disconnected);
 
   console.log("scripting image_upload command", fileBuffer.length, "bytes");
-  var printStatus = function(obj){
+  printStatus = function(obj){
     console.log(utility.prettyError(obj));
   }
-  var status;
   status = transport.image.upload(char, fileBuffer, 30000, function(err,obj){
     status.removeListener('status', printStatus);
     periph.removeListener('disconnect', disconnected);
@@ -252,11 +266,11 @@ async.series([
     });
   },
 
-  upload.bind(this, newLoader),
+  upload.bind(this, newLoader, 5),
   moveToNewLoader,
   confirm,
   eraseAndStayConnected,
-  upload.bind(this, newApp),
+  upload.bind(this, newApp, 5),
   moveToNewApp,
   confirm,
 
